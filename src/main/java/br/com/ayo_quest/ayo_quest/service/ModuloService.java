@@ -36,7 +36,7 @@ public class ModuloService {
 
     public List<ModuloDTO> listar() {
 
-        List<ModuloEntity> modulos = repository.findAll();
+        List<ModuloEntity> modulos = repository.listarComTrilha();
 
         return modulos.stream().map(modulo -> {
 
