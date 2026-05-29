@@ -1,5 +1,5 @@
 # Stage 1 - Build
-FROM maven:3.9.6-eclipse-temurin-17 AS build
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
@@ -15,17 +15,12 @@ COPY src ./src
 # Build da aplicação
 RUN mvn -B clean package -DskipTests
 
-
-# Stage 2 - Runtime (leve e seguro)
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:21-jdk-alpine
 
 WORKDIR /app
 
-# Copia jar gerado
 COPY --from=build /app/target/*.jar app.jar
 
-# Porta do Fly
 EXPOSE 8080
 
-# Start da aplicação
 ENTRYPOINT ["java", "-jar", "app.jar"]
