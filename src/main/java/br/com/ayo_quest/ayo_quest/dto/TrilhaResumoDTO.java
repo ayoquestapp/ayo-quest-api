@@ -5,13 +5,9 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class ModuloDTO {
+@AllArgsConstructor
+public class TrilhaResumoDTO {
     private Long id;
     private String nome;
-    private String descricao;
-    private Long cargaHoraria;
-    private Integer xpAoConcluir;
-    private TrilhaResumoDTO trilha;
 }

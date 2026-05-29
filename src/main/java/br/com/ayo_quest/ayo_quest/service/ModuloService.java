@@ -1,6 +1,8 @@
 package br.com.ayo_quest.ayo_quest.service;
 
 import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
+import br.com.ayo_quest.ayo_quest.dto.TrilhaDTO;
+import br.com.ayo_quest.ayo_quest.dto.TrilhaResumoDTO;
 import br.com.ayo_quest.ayo_quest.models.*;
 import br.com.ayo_quest.ayo_quest.repository.ModuloRepository;
 import br.com.ayo_quest.ayo_quest.repository.TrilhaRepository;
@@ -33,26 +35,30 @@ public class ModuloService {
     }
 
     public List<ModuloDTO> listar() {
-        return repository.findAll()
-                .stream()
-                .map(this::toDTO)
-                .toList();
-    }
 
-    private ModuloDTO toDTO(ModuloEntity entity) {
-        ModuloDTO dto = new ModuloDTO();
+        List<ModuloEntity> modulos = repository.findAll();
 
-        dto.setId(entity.getId());
-        dto.setNome(entity.getNome());
-        dto.setDescricao(entity.getDescricao());
-        dto.setCargaHoraria(entity.getCargaHoraria());
-        dto.setXpAoConcluir(entity.getXpAoConcluir());
+        return modulos.stream().map(modulo -> {
 
-        if (entity.getTrilha() != null) {
-            dto.setTrilhaId(entity.getTrilha().getId());
-        }
+            TrilhaResumoDTO trilhaDTO = null;
 
-        return dto;
+            if (modulo.getTrilha() != null) {
+                trilhaDTO = new TrilhaResumoDTO(
+                        modulo.getTrilha().getId(),
+                        modulo.getTrilha().getNome()
+                );
+            }
+
+            return new ModuloDTO(
+                    modulo.getId(),
+                    modulo.getNome(),
+                    modulo.getDescricao(),
+                    modulo.getCargaHoraria(),
+                    modulo.getXpAoConcluir(),
+                    trilhaDTO
+            );
+
+        }).toList();
     }
 
     @Transactional
