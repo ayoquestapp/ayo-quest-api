@@ -15,7 +15,7 @@ public class TrilhaService {
     private TrilhaRepository trilhaRepository;
 
     public List<TrilhaDTO> listar(){
-        List<TrilhaEntity> trilhas = trilhaRepository.findAll();
+        List<TrilhaEntity> trilhas = trilhaRepository.listarComModulos();
 
         return trilhas.stream().map(trilha -> new TrilhaDTO(
                 trilha.getId(),
