@@ -1,5 +1,6 @@
 package br.com.ayo_quest.ayo_quest.service;
 
+import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
 import br.com.ayo_quest.ayo_quest.models.*;
 import br.com.ayo_quest.ayo_quest.repository.ModuloRepository;
 import br.com.ayo_quest.ayo_quest.repository.TrilhaRepository;
@@ -31,8 +32,27 @@ public class ModuloService {
         return repository.save(modulo);
     }
 
-    public List<ModuloEntity> listar() {
-        return repository.findAll();
+    public List<ModuloDTO> listar() {
+        return repository.findAll()
+                .stream()
+                .map(this::toDTO)
+                .toList();
+    }
+
+    private ModuloDTO toDTO(ModuloEntity entity) {
+        ModuloDTO dto = new ModuloDTO();
+
+        dto.setId(entity.getId());
+        dto.setNome(entity.getNome());
+        dto.setDescricao(entity.getDescricao());
+        dto.setCargaHoraria(entity.getCargaHoraria());
+        dto.setXpAoConcluir(entity.getXpAoConcluir());
+
+        if (entity.getTrilha() != null) {
+            dto.setTrilhaId(entity.getTrilha().getId());
+        }
+
+        return dto;
     }
 
     @Transactional

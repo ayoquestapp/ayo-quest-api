@@ -1,6 +1,7 @@
 package br.com.ayo_quest.ayo_quest.models;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -22,6 +23,6 @@ public class AlternativaEntity {
 
     @ManyToOne
     @JoinColumn(name = "questao_id")
-    @JsonBackReference
+    @JsonIgnore
     private QuestaoEntity questao;
 }

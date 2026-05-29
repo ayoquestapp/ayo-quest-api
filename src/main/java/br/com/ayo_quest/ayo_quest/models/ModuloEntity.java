@@ -1,5 +1,6 @@
 package br.com.ayo_quest.ayo_quest.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -30,11 +31,12 @@ public class ModuloEntity {
 
     @ManyToOne
     TrilhaEntity trilha;
-
-    @OneToMany(mappedBy = "modulo", cascade = CascadeType.ALL , fetch = FetchType.EAGER)
+    
+    @JsonIgnore
+    @OneToMany(mappedBy = "modulo", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
     private List<ConteudoEntity> conteudos;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "modulo", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JsonIgnore
+    @OneToMany(mappedBy = "modulo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<QuestaoEntity> questoes;
 }

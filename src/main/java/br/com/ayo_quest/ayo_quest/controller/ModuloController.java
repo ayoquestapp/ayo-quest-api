@@ -1,5 +1,6 @@
 package br.com.ayo_quest.ayo_quest.controller;
 
+import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
 import br.com.ayo_quest.ayo_quest.models.ModuloEntity;
 import br.com.ayo_quest.ayo_quest.service.ModuloService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,7 @@ public class ModuloController {
     }
 
     @GetMapping("/listar")
-    public ResponseEntity<List<ModuloEntity>> listar() {
+    public ResponseEntity<List<ModuloDTO>> listar() {
         return ResponseEntity.ok(service.listar());
     }
 
