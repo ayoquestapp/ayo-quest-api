@@ -1,7 +1,5 @@
 package br.com.ayo_quest.ayo_quest.service;
-
 import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
-import br.com.ayo_quest.ayo_quest.dto.TrilhaDTO;
 import br.com.ayo_quest.ayo_quest.dto.TrilhaResumoDTO;
 import br.com.ayo_quest.ayo_quest.models.*;
 import br.com.ayo_quest.ayo_quest.repository.ModuloRepository;
