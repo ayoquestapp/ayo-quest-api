@@ -73,4 +73,6 @@ public class SecurityConfig {
                 .jwsAlgorithm(org.springframework.security.oauth2.jose.jws.SignatureAlgorithm.ES256)
                 .build();
     }
+
+
 }
