@@ -48,7 +48,8 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
-                "http://localhost:4200"
+                "http://localhost:4200",
+                "https://ayo-quest.vercel.app"
         ));
 
         config.setAllowedMethods(List.of(
