@@ -3,7 +3,9 @@ package br.com.ayo_quest.ayo_quest.service;
 import br.com.ayo_quest.ayo_quest.enuns.TipoUsuario;
 import br.com.ayo_quest.ayo_quest.models.ProfileEntity;
 import br.com.ayo_quest.ayo_quest.repository.ProfileRepository;
+import br.com.ayo_quest.ayo_quest.repository.TurmaRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

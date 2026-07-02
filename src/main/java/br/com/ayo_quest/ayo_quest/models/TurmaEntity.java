@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -47,5 +48,13 @@ public class TurmaEntity {
 
     @Column(name = "ST_TURMA")
     private String stTurma;
+
+    @ManyToMany
+    @JoinTable(
+            name = "TBL_TURMA_TRILHA",
+            joinColumns = @JoinColumn(name = "ID_TURMA"),
+            inverseJoinColumns = @JoinColumn(name = "ID_TRILHA")
+    )
+    private List<TrilhaEntity> trilhas;
 
 }
