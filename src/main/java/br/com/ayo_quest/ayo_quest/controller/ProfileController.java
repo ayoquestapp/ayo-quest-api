@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -27,10 +28,17 @@ public class ProfileController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<ProfileEntity> getMyProfile(Authentication authentication) {
+    public ResponseEntity<?> getMyProfile(Authentication authentication) {
 
-        String userId = authentication.getName();
-        System.out.println("AUTH: " + authentication);
-        return ResponseEntity.ok(service.getById(UUID.fromString(userId)));
+        System.out.println("=== AUTH DEBUG ===");
+        System.out.println("AUTH CLASS: " + authentication.getClass());
+        System.out.println("AUTH NAME: " + authentication.getName());
+        System.out.println("PRINCIPAL: " + authentication.getPrincipal());
+        System.out.println("==================");
+
+        return ResponseEntity.ok(Map.of(
+                "authName", authentication.getName(),
+                "principalClass", authentication.getPrincipal().getClass().getName()
+        ));
     }
 }
