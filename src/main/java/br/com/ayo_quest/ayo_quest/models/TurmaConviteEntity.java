@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @Table(name = "tbl_turma_convite")
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class TurmaConviteEntity {
 
     @Id
