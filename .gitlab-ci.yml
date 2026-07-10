@@ -1,0 +1,53 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  APP_NAME: "api-ayoquest"
+  HARBOR_PROJECT_DEV: "ayo-dev"
+  IMAGE_NAME_DEV: "$HARBOR_HOST/$HARBOR_PROJECT_DEV/$APP_NAME"
+  KUBE_NAMESPACE_DEV: "api-ayoquest-dev"
+
+build:dev:
+  stage: build
+  tags:
+    - docker
+  image:
+    name: gcr.io/kaniko-project/executor:v1.23.2-debug
+    entrypoint: [""]
+  only:
+    - develop
+  script:
+    - mkdir -p /kaniko/.docker
+    - |
+      echo "{\"auths\":{\"$HARBOR_HOST\":{\"auth\":\"$(echo -n "$HARBOR_USERNAME:$HARBOR_PASSWORD" | base64 | tr -d '\n')\"}}}" > /kaniko/.docker/config.json
+    - >
+      /kaniko/executor
+      --context "$CI_PROJECT_DIR"
+      --dockerfile "$CI_PROJECT_DIR/Dockerfile"
+      --destination "$IMAGE_NAME_DEV:dev-$CI_COMMIT_SHORT_SHA"
+      --destination "$IMAGE_NAME_DEV:dev-latest"
+      --cache=true
+      --cache-ttl=168h
+
+deploy:dev:
+  stage: deploy
+  tags:
+    - rancher
+  image: bitnami/minideb:latest
+  only:
+    - develop
+  environment:
+    name: dev
+  before_script:
+    - install_packages curl ca-certificates
+    - curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+    - install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+    - mkdir -p ~/.kube
+    - echo "$KUBECONFIG_DEV" | base64 -d > ~/.kube/config
+    - chmod 600 ~/.kube/config
+  script:
+    - kubectl create namespace "$KUBE_NAMESPACE_DEV" --dry-run=client -o yaml | kubectl apply -f -
+    - sed -i "s|IMAGE_TAG_PLACEHOLDER|$IMAGE_NAME_DEV:dev-$CI_COMMIT_SHORT_SHA|g" k8s/deployment.dev.yml
+    - kubectl apply -f k8s/deployment.dev.yml -n "$KUBE_NAMESPACE_DEV"
+    - kubectl rollout status deployment/api-ayoquest -n "$KUBE_NAMESPACE_DEV" --timeout=300s
