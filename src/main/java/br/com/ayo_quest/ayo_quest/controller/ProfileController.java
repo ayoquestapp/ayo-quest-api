@@ -1,14 +1,16 @@
 package br.com.ayo_quest.ayo_quest.controller;
 
+import br.com.ayo_quest.ayo_quest.dto.DadosProfileDTO;
 import br.com.ayo_quest.ayo_quest.models.ProfileEntity;
 import br.com.ayo_quest.ayo_quest.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -40,5 +42,18 @@ public class ProfileController {
                 "authName", authentication.getName(),
                 "principalClass", authentication.getPrincipal().getClass().getName()
         ));
+    }
+
+    @GetMapping("/dados-profile")
+    public ResponseEntity<DadosProfileDTO> getDadosProfile(
+            @AuthenticationPrincipal Jwt jwt) {
+
+        return ResponseEntity.ok(service.getDados(jwt));
+    }
+
+    @PutMapping("/dados-profile/alterar")
+    public ResponseEntity<DadosProfileDTO> updateDadosProfile(@AuthenticationPrincipal Jwt jwt,@RequestBody DadosProfileDTO dto) {
+
+        return ResponseEntity.ok(service.alterarDados(jwt,dto));
     }
 }

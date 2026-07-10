@@ -18,7 +18,10 @@ public class ProfileEntity {
     @Id
     private UUID id;
     private String name;
+    private String txNomeExibicao;
     private String avatar_url;
+    private String bio;
+    private String localizacao;
     @Enumerated(EnumType.STRING)
     private TipoUsuario role;
     private String email;
