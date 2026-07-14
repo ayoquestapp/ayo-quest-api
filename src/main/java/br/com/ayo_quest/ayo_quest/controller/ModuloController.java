@@ -1,5 +1,6 @@
 package br.com.ayo_quest.ayo_quest.controller;
 
+import br.com.ayo_quest.ayo_quest.dto.ModuloCadastroDTO;
 import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
 import br.com.ayo_quest.ayo_quest.models.ModuloEntity;
 import br.com.ayo_quest.ayo_quest.service.ModuloService;
@@ -18,8 +19,13 @@ public class ModuloController {
     private ModuloService service;
 
     @PostMapping("/cadastrar")
-    public ModuloEntity salvar(@RequestBody ModuloEntity modulo) {
-        return service.salvar(modulo);
+    public ResponseEntity<ModuloEntity> salvar(
+            @RequestBody ModuloCadastroDTO dto
+    ) {
+
+        return ResponseEntity.ok(
+                service.salvar(dto)
+        );
     }
 
     @GetMapping("/listar")
@@ -43,4 +49,16 @@ public class ModuloController {
         ModuloEntity modulo = service.buscarPorId(id);
         return ResponseEntity.ok(modulo);
     }
+
+    @GetMapping("/trilha/{id}")
+    public ResponseEntity<List<ModuloDTO>> buscarPorTrilha(
+            @PathVariable Long id
+    ) {
+
+        return ResponseEntity.ok(
+                service.buscarPorTrilha(id)
+        );
+
+    }
+
 }
