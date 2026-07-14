@@ -28,6 +28,8 @@ public class TrilhaEntity {
 
     private String  imagem;
 
+    private String tag;
+
 
     @OneToMany(mappedBy = "trilha")
     @JsonIgnore

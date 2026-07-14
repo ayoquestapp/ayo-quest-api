@@ -38,7 +38,9 @@ public class ProfileService {
                 profile.getTxNomeExibicao(),
                 profile.getEmail(),
                 profile.getLocalizacao(),
-                profile.getBio()
+                profile.getBio(),
+                profile.getLevel(),
+                profile.getXp()
         );
     }
 
@@ -56,7 +58,9 @@ public class ProfileService {
                             profile.getTxNomeExibicao(),
                             profile.getEmail(),
                             profile.getLocalizacao(),
-                            profile.getBio()
+                            profile.getBio(),
+                            profile.getLevel(),
+                            profile.getXp()
                     );
                 })
                 .orElseThrow(() -> new RuntimeException("Profile não encontrado"));

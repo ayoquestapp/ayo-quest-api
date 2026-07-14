@@ -1,4 +1,5 @@
 package br.com.ayo_quest.ayo_quest.service;
+import br.com.ayo_quest.ayo_quest.dto.ModuloCadastroDTO;
 import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
 import br.com.ayo_quest.ayo_quest.dto.TrilhaResumoDTO;
 import br.com.ayo_quest.ayo_quest.models.*;
@@ -19,15 +20,29 @@ public class ModuloService {
     @Autowired
     private ModuloRepository repository;
 
-    public ModuloEntity salvar(ModuloEntity modulo) {
+    @Transactional
+    public ModuloEntity salvar(ModuloCadastroDTO dto) {
 
-        if (modulo.getTrilha() != null && modulo.getTrilha().getId() != null) {
-            TrilhaEntity trilha = trilhaRepository
-                    .findById(modulo.getTrilha().getId())
-                    .orElseThrow(() -> new RuntimeException("Trilha não encontrada"));
+
+        ModuloEntity modulo = new ModuloEntity();
+
+        modulo.setNome(dto.getNome());
+        modulo.setDescricao(dto.getDescricao());
+        modulo.setCargaHoraria(dto.getCargaHoraria());
+        modulo.setXpAoConcluir(dto.getXpAoConcluir());
+
+
+        if(dto.getTrilha() != null){
+
+            TrilhaEntity trilha =
+                    trilhaRepository.findById(dto.getTrilha().getId())
+                            .orElseThrow(() ->
+                                    new RuntimeException("Trilha não encontrada")
+                            );
 
             modulo.setTrilha(trilha);
         }
+
 
         return repository.save(modulo);
     }
@@ -113,5 +128,25 @@ public class ModuloService {
     public ModuloEntity buscarPorId(Long id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
+    }
+
+    public List<ModuloDTO> buscarPorTrilha(Long id){
+
+        return repository
+                .findByTrilhaId(id)
+                .stream()
+                .map(m -> new ModuloDTO(
+                        m.getId(),
+                        m.getNome(),
+                        m.getDescricao(),
+                        m.getCargaHoraria(),
+                        m.getXpAoConcluir(),
+                        new TrilhaResumoDTO(
+                                m.getTrilha().getId(),
+                                m.getTrilha().getNome()
+                        )
+                ))
+                .toList();
+
     }
 }

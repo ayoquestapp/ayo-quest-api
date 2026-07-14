@@ -2,20 +2,19 @@ package br.com.ayo_quest.ayo_quest.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
-public class TrilhaDTO {
+@NoArgsConstructor
+public class TrilhaUpdateDTO {
 
-    private Long id;
     private String nome;
-    private String code;
-    private String descricao;
-    private Integer quantidadeModulos;
-    private String imagem;
-    private String tag;
-    private Long cargaHoraria;
-    private Long xpTotal;
 
+    private String code;
+
+    private String descricao;
+
+    private String imagem;
 
 }

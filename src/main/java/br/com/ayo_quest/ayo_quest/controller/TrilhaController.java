@@ -1,6 +1,8 @@
 package br.com.ayo_quest.ayo_quest.controller;
 
+import br.com.ayo_quest.ayo_quest.dto.TrilhaCreateDTO;
 import br.com.ayo_quest.ayo_quest.dto.TrilhaDTO;
+import br.com.ayo_quest.ayo_quest.dto.TrilhaUpdateDTO;
 import br.com.ayo_quest.ayo_quest.models.TrilhaEntity;
 import br.com.ayo_quest.ayo_quest.service.TrilhaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,35 +25,29 @@ public class TrilhaController {
         return ResponseEntity.ok(trilhaService.listar());
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<TrilhaEntity> detalhar(
-            @PathVariable Long id
-    ) {
-
-        return ResponseEntity.ok(
-                trilhaService.detalhar(id)
-        );
+    @GetMapping("/detalhar/{id}")
+    public ResponseEntity<TrilhaDTO> detalhar(@PathVariable Long id) {
+        return ResponseEntity.ok(trilhaService.detalhar(id));
     }
 
     @PostMapping("/criar")
     public ResponseEntity<TrilhaEntity> criar(
-            @RequestBody TrilhaEntity trilha
+            @RequestBody TrilhaCreateDTO dto
     ) {
 
         return ResponseEntity.ok(
-                trilhaService.criar(trilha)
+                trilhaService.criar(dto)
         );
     }
 
     @PutMapping("/atualizar/{id}")
-    public ResponseEntity<TrilhaEntity> atualizar(
+    public ResponseEntity<Void> atualizar(
             @PathVariable Long id,
-            @RequestBody TrilhaEntity trilha
-    ) {
+            @RequestBody TrilhaUpdateDTO dto
+    ){
+        trilhaService.atualizar(id, dto);
 
-        return ResponseEntity.ok(
-                trilhaService.atualizar(id, trilha)
-        );
+        return ResponseEntity.ok().build();
     }
 
     @DeleteMapping("/deletar/{id}")

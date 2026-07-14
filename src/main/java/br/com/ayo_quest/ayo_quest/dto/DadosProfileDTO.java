@@ -17,5 +17,7 @@ public class DadosProfileDTO {
     private String email;
     private String localizacao;
     private String bio;
+    private Integer level;
+    private Long xp;
 
 }
