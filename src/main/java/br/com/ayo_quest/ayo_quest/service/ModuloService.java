@@ -1,7 +1,10 @@
 package br.com.ayo_quest.ayo_quest.service;
-import br.com.ayo_quest.ayo_quest.dto.ModuloCadastroDTO;
-import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
-import br.com.ayo_quest.ayo_quest.dto.TrilhaResumoDTO;
+
+import br.com.ayo_quest.ayo_quest.dto.*;
+import br.com.ayo_quest.ayo_quest.dto.resolver.AlternativaResolverDTO;
+import br.com.ayo_quest.ayo_quest.dto.resolver.ConteudoResolverDTO;
+import br.com.ayo_quest.ayo_quest.dto.resolver.ModuloResolverDTO;
+import br.com.ayo_quest.ayo_quest.dto.resolver.QuestaoResolverDTO;
 import br.com.ayo_quest.ayo_quest.models.*;
 import br.com.ayo_quest.ayo_quest.repository.ModuloRepository;
 import br.com.ayo_quest.ayo_quest.repository.TrilhaRepository;
@@ -9,7 +12,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.stream.Collectors;
+
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ModuloService {
@@ -23,7 +29,6 @@ public class ModuloService {
     @Transactional
     public ModuloEntity salvar(ModuloCadastroDTO dto) {
 
-
         ModuloEntity modulo = new ModuloEntity();
 
         modulo.setNome(dto.getNome());
@@ -31,18 +36,59 @@ public class ModuloService {
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
 
+        if (dto.getTrilha() != null) {
 
-        if(dto.getTrilha() != null){
-
-            TrilhaEntity trilha =
-                    trilhaRepository.findById(dto.getTrilha().getId())
-                            .orElseThrow(() ->
-                                    new RuntimeException("Trilha não encontrada")
-                            );
+            TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilha().getId())
+                    .orElseThrow(() ->
+                            new RuntimeException("Trilha não encontrada"));
 
             modulo.setTrilha(trilha);
         }
 
+        if (dto.getConteudos() != null && !dto.getConteudos().isEmpty()) {
+
+            List<ConteudoEntity> conteudos = dto.getConteudos()
+                    .stream()
+                    .map(c -> {
+
+                        ConteudoEntity conteudo = new ConteudoEntity();
+
+                        conteudo.setTipo(c.getTipo());
+                        conteudo.setTitulo(c.getTitulo());
+                        conteudo.setValor(c.getValor());
+                        conteudo.setModulo(modulo);
+
+                        return conteudo;
+
+                    })
+                    .collect(Collectors.toList());
+
+            modulo.setConteudos(conteudos);
+        }
+
+        // Questões
+        if (dto.getQuestoes() != null && !dto.getQuestoes().isEmpty()) {
+
+            List<QuestaoEntity> questoes = dto.getQuestoes()
+                    .stream()
+                    .map(q -> {
+
+                        QuestaoEntity questao = new QuestaoEntity();
+
+                        questao.setEnunciado(q.getEnunciado());
+                        questao.setTipo(q.getTipo());
+                        questao.setXp(q.getXp());
+
+                        // relacionamento
+                        questao.setModulo(modulo);
+
+                        return questao;
+
+                    })
+                    .collect(Collectors.toList());
+
+            modulo.setQuestoes(questoes);
+        }
 
         return repository.save(modulo);
     }
@@ -62,13 +108,38 @@ public class ModuloService {
                 );
             }
 
+            List<QuestaoDTO> questoes = modulo.getQuestoes()
+                    .stream()
+                    .map(q -> {
+                        QuestaoDTO dto = new QuestaoDTO();
+                        dto.setEnunciado(q.getEnunciado());
+                        dto.setTipo(q.getTipo());
+                        dto.setXp(q.getXp());
+
+                        dto.setAlternativas(
+                                q.getAlternativas()
+                                        .stream()
+                                        .map(a -> {
+                                            AlternativaDTO alt = new AlternativaDTO();
+                                            alt.setTexto(a.getTexto());
+                                            alt.setCorreta(a.isCorreta());
+                                            return alt;
+                                        })
+                                        .toList()
+                        );
+
+                        return dto;
+                    })
+                    .toList();
+
             return new ModuloDTO(
                     modulo.getId(),
                     modulo.getNome(),
                     modulo.getDescricao(),
                     modulo.getCargaHoraria(),
                     modulo.getXpAoConcluir(),
-                    trilhaDTO
+                    trilhaDTO,
+                    questoes
             );
 
         }).toList();
@@ -76,61 +147,117 @@ public class ModuloService {
 
     @Transactional
     public void deletarModulo(Long id) {
-        ModuloEntity modulo = repository.findById(id).orElseThrow();
 
-        for (QuestaoEntity questao : modulo.getQuestoes()) {
-            for (AlternativaEntity alt : questao.getAlternativas()) {
-                alt.setQuestao(null);
-            }
-            questao.getAlternativas().clear();
-        }
-
-
-        for (QuestaoEntity questao : modulo.getQuestoes()) {
-            questao.setModulo(null);
-        }
-        modulo.getQuestoes().clear();
-
-        for (ConteudoEntity conteudo : modulo.getConteudos()) {
-            conteudo.setModulo(null);
-        }
-        modulo.getConteudos().clear();
+        ModuloEntity modulo = repository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Módulo não encontrado")
+                );
 
         repository.delete(modulo);
     }
 
-    public ModuloEntity atualizar(Long id, ModuloEntity modulo) {
-        modulo.setId(id);
+    @Transactional
+    public ModuloDTO atualizar(Long id, ModuloAtualizacaoDTO dto) {
 
-        if (modulo.getConteudos() != null) {
-            modulo.getConteudos().forEach(c -> c.setModulo(modulo));
-        }
-
-        if (modulo.getQuestoes() != null) {
-            modulo.getQuestoes().forEach(q -> {
-                q.setModulo(modulo);
-
-                if (q.getAlternativas() != null) {
-                    q.getAlternativas().forEach(a -> a.setQuestao(q));
-                }
-            });
-        }
-
-        modulo.getQuestoes().forEach(q -> {
-            if (q.getTipo() == null) {
-                throw new RuntimeException("Tipo da questão é obrigatório");
-            }
-        });
-
-        return repository.save(modulo);
-    }
-
-    public ModuloEntity buscarPorId(Long id) {
-        return repository.findById(id)
+        ModuloEntity modulo = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
+
+        modulo.setNome(dto.getNome());
+        modulo.setDescricao(dto.getDescricao());
+        modulo.setCargaHoraria(dto.getCargaHoraria());
+        modulo.setXpAoConcluir(dto.getXpAoConcluir());
+
+        if (dto.getTrilhaId() != null) {
+            TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilhaId())
+                    .orElseThrow(() -> new RuntimeException("Trilha não encontrada"));
+            modulo.setTrilha(trilha);
+        }
+
+        ModuloEntity salvo = repository.save(modulo);
+
+        return ModuloDTO.builder()
+                .id(salvo.getId())
+                .nome(salvo.getNome())
+                .descricao(salvo.getDescricao())
+                .cargaHoraria(salvo.getCargaHoraria())
+                .xpAoConcluir(salvo.getXpAoConcluir())
+                .trilha(TrilhaResumoDTO.builder()
+                        .id(salvo.getTrilha().getId())
+                        .nome(salvo.getTrilha().getNome())
+                        .build())
+                .build();
     }
 
-    public List<ModuloDTO> buscarPorTrilha(Long id){
+    public ModuloResponseDTO buscarPorId(Long id) {
+
+        ModuloEntity modulo = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
+
+
+        ModuloResponseDTO dto = new ModuloResponseDTO();
+
+        dto.setId(modulo.getId());
+        dto.setNome(modulo.getNome());
+        dto.setDescricao(modulo.getDescricao());
+        dto.setCargaHoraria(modulo.getCargaHoraria());
+        dto.setXpAoConcluir(modulo.getXpAoConcluir());
+
+
+        dto.setQuestoes(
+                modulo.getQuestoes()
+                        .stream()
+                        .map(q -> {
+
+                            QuestaoDTO questao = new QuestaoDTO();
+
+                            questao.setTipo(q.getTipo());
+                            questao.setEnunciado(q.getEnunciado());
+                            questao.setXp(q.getXp());
+
+                            questao.setAlternativas(
+                                    q.getAlternativas()
+                                            .stream()
+                                            .map(a -> {
+
+                                                AlternativaDTO alternativa = new AlternativaDTO();
+
+                                                alternativa.setTexto(a.getTexto());
+                                                alternativa.setCorreta(a.isCorreta());
+
+                                                return alternativa;
+
+                                            })
+                                            .toList()
+                            );
+
+                            return questao;
+
+                        })
+                        .toList()
+        );
+        dto.setConteudos(
+                modulo.getConteudos()
+                        .stream()
+                        .map(c -> {
+
+                            ConteudoDTO conteudo = new ConteudoDTO();
+
+                            conteudo.setId(c.getId());
+                            conteudo.setTipo(c.getTipo());
+                            conteudo.setTitulo(c.getTitulo());
+                            conteudo.setValor(c.getValor());
+
+                            return conteudo;
+
+                        })
+                        .toList()
+        );
+
+
+        return dto;
+    }
+
+    public List<ModuloDTO> buscarPorTrilha(Long id) {
 
         return repository
                 .findByTrilhaId(id)
@@ -144,9 +271,87 @@ public class ModuloService {
                         new TrilhaResumoDTO(
                                 m.getTrilha().getId(),
                                 m.getTrilha().getNome()
-                        )
+                        ),
+                        converterQuestoes(m.getQuestoes())
                 ))
                 .toList();
 
+    }
+
+    public ModuloResolverDTO buscarModuloResolver(Long id) {
+
+        ModuloEntity modulo = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
+
+        List<ConteudoResolverDTO> conteudos = modulo.getConteudos()
+                .stream()
+                .map(c -> new ConteudoResolverDTO(
+                        c.getId(),
+                        c.getTipo(),
+                        c.getValor()
+                ))
+                .toList();
+
+        List<QuestaoResolverDTO> questoes = modulo.getQuestoes()
+                .stream()
+                .map(q -> {
+
+                    List<AlternativaResolverDTO> alternativas =
+                            q.getAlternativas()
+                                    .stream()
+                                    .map(a -> new AlternativaResolverDTO(
+                                            a.getId(),
+                                            a.getTexto()
+                                    ))
+                                    .toList();
+
+                    return new QuestaoResolverDTO(
+                            q.getId(),
+                            q.getEnunciado(),
+                            q.getTipo(),
+                            q.getXp(),
+                            alternativas
+                    );
+
+                })
+                .toList();
+
+        return new ModuloResolverDTO(
+                modulo.getId(),
+                modulo.getNome(),
+                modulo.getDescricao(),
+                modulo.getCargaHoraria(),
+                modulo.getXpAoConcluir(),
+                conteudos,
+                questoes
+        );
+
+    }
+
+    private List<QuestaoDTO> converterQuestoes(List<QuestaoEntity> questoes) {
+
+        return questoes.stream()
+                .map(q -> {
+
+                    QuestaoDTO dto = new QuestaoDTO();
+                    dto.setEnunciado(q.getEnunciado());
+                    dto.setTipo(q.getTipo());
+                    dto.setXp(q.getXp());
+
+                    dto.setAlternativas(
+                            q.getAlternativas()
+                                    .stream()
+                                    .map(a -> {
+                                        AlternativaDTO alt = new AlternativaDTO();
+                                        alt.setTexto(a.getTexto());
+                                        alt.setCorreta(a.isCorreta());
+                                        return alt;
+                                    })
+                                    .toList()
+                    );
+
+                    return dto;
+                })
+                .toList();
     }
 }

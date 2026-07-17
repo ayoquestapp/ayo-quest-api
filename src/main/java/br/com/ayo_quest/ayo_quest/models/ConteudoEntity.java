@@ -20,12 +20,16 @@ public class ConteudoEntity {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    TipoConteudo tipo;
+    private TipoConteudo tipo;
 
-    @Lob
-    String valor;
+    private String titulo;
 
-    @ManyToOne
+    @Column(columnDefinition = "TEXT")
+    private String valor;
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "modulo_id")
     @JsonIgnore
     private ModuloEntity modulo;
 }

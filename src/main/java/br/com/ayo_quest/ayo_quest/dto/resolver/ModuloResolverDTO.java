@@ -1,22 +1,29 @@
-package br.com.ayo_quest.ayo_quest.dto;
+package br.com.ayo_quest.ayo_quest.dto.resolver;
+
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ModuloDTO {
+public class ModuloResolverDTO {
+
     private Long id;
+
     private String nome;
+
     private String descricao;
+
     private Long cargaHoraria;
+
     private Long xpAoConcluir;
-    private TrilhaResumoDTO trilha;
-    private List<QuestaoDTO> questoes;
+
+    private List<ConteudoResolverDTO> conteudos;
+
+    private List<QuestaoResolverDTO> questoes;
+
 }

@@ -13,7 +13,7 @@ public class ModuloCadastroDTO {
 
     private Long cargaHoraria;
 
-    private Integer xpAoConcluir;
+    private Long xpAoConcluir;
 
     private TrilhaDTO trilha;
 

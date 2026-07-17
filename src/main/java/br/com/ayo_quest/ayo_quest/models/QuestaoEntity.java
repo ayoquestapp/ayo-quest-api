@@ -1,10 +1,7 @@
 package br.com.ayo_quest.ayo_quest.models;
 
 import br.com.ayo_quest.ayo_quest.enuns.TipoQuestao;
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
@@ -32,13 +29,16 @@ public class QuestaoEntity {
 
     private Integer xp;
 
-    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "modulo_id")
+    @JsonIgnore
     private ModuloEntity modulo;
 
-    @OneToMany(mappedBy = "questao", cascade = CascadeType.ALL, fetch = FetchType.LAZY , orphanRemoval = true)
-    @JsonManagedReference
+    @OneToMany(
+            mappedBy = "questao",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
     private List<AlternativaEntity> alternativas = new ArrayList<>();
 }
 

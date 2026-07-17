@@ -1,5 +1,6 @@
 package br.com.ayo_quest.ayo_quest.dto;
 
+import br.com.ayo_quest.ayo_quest.enuns.TipoQuestao;
 import lombok.Data;
 
 import java.util.List;
@@ -7,7 +8,9 @@ import java.util.List;
 @Data
 public class QuestaoDTO {
 
-    private String tipo;
+    private Long id;
+
+    private TipoQuestao tipo;
 
     private String enunciado;
 

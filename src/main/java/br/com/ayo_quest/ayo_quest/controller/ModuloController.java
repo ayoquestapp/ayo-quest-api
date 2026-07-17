@@ -1,7 +1,10 @@
 package br.com.ayo_quest.ayo_quest.controller;
 
+import br.com.ayo_quest.ayo_quest.dto.ModuloAtualizacaoDTO;
 import br.com.ayo_quest.ayo_quest.dto.ModuloCadastroDTO;
 import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
+import br.com.ayo_quest.ayo_quest.dto.ModuloResponseDTO;
+import br.com.ayo_quest.ayo_quest.dto.resolver.ModuloResolverDTO;
 import br.com.ayo_quest.ayo_quest.models.ModuloEntity;
 import br.com.ayo_quest.ayo_quest.service.ModuloService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,13 +43,16 @@ public class ModuloController {
     }
 
     @PutMapping("alterar/{id}")
-    public ModuloEntity atualizar(@PathVariable Long id, @RequestBody ModuloEntity modulo) {
-        return service.atualizar(id, modulo);
+    public ResponseEntity<ModuloDTO> atualizar(
+            @PathVariable Long id,
+            @RequestBody ModuloAtualizacaoDTO dto) {
+
+        return ResponseEntity.ok(service.atualizar(id, dto));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ModuloEntity> buscarPorId(@PathVariable Long id) {
-        ModuloEntity modulo = service.buscarPorId(id);
+    public ResponseEntity<ModuloResponseDTO> buscarPorId(@PathVariable Long id) {
+        ModuloResponseDTO modulo = service.buscarPorId(id);
         return ResponseEntity.ok(modulo);
     }
 
@@ -59,6 +65,11 @@ public class ModuloController {
                 service.buscarPorTrilha(id)
         );
 
+    }
+
+    @GetMapping("/{id}/resolver")
+    public ResponseEntity<ModuloResolverDTO> buscarPorIdResolver(@PathVariable Long id) {
+        return ResponseEntity.ok(service.buscarModuloResolver(id));
     }
 
 }
