@@ -12,6 +12,7 @@ import jakarta.persistence.Id;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Table(name = "TBL_ALTERNATIVA")
 public class AlternativaEntity {
 
     @Id
@@ -19,6 +20,7 @@ public class AlternativaEntity {
     private Long id;
 
     private String texto;
+
     private boolean correta;
 
     @ManyToOne

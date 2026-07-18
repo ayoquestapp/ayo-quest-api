@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import jakarta.persistence.Id;
 
+import java.util.ArrayList;
 import java.util.List;
 @Data
 @NoArgsConstructor
@@ -27,16 +28,25 @@ public class ModuloEntity {
     private Long cargaHoraria;
 
     @Column(name = "xp_ao_concluir")
-    private Integer xpAoConcluir;
+    private Long xpAoConcluir;
 
     @ManyToOne
+    @JoinColumn(name = "trilha_id")
     TrilhaEntity trilha;
-    
-    @JsonIgnore
-    @OneToMany(mappedBy = "modulo", cascade = CascadeType.ALL , fetch = FetchType.LAZY)
-    private List<ConteudoEntity> conteudos;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "modulo", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<QuestaoEntity> questoes;
+
+    @OneToMany(
+            mappedBy = "modulo",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<ConteudoEntity> conteudos = new ArrayList<>();
+
+
+    @OneToMany(
+            mappedBy = "modulo",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<QuestaoEntity> questoes = new ArrayList<>();
 }
