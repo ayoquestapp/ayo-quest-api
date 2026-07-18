@@ -78,9 +78,29 @@ public class ModuloService {
                         questao.setEnunciado(q.getEnunciado());
                         questao.setTipo(q.getTipo());
                         questao.setXp(q.getXp());
-
-                        // relacionamento
                         questao.setModulo(modulo);
+
+                        if (q.getAlternativas() != null && !q.getAlternativas().isEmpty()) {
+
+                            List<AlternativaEntity> alternativas = q.getAlternativas()
+                                    .stream()
+                                    .map(a -> {
+
+                                        AlternativaEntity alternativa = new AlternativaEntity();
+
+                                        alternativa.setTexto(a.getTexto());
+                                        alternativa.setCorreta(a.isCorreta());
+
+                                        // relacionamento
+                                        alternativa.setQuestao(questao);
+
+                                        return alternativa;
+
+                                    })
+                                    .collect(Collectors.toList());
+
+                            questao.setAlternativas(alternativas);
+                        }
 
                         return questao;
 
@@ -162,29 +182,142 @@ public class ModuloService {
         ModuloEntity modulo = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
 
+
+        // Dados básicos
         modulo.setNome(dto.getNome());
         modulo.setDescricao(dto.getDescricao());
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
 
+
+        // Atualiza trilha
         if (dto.getTrilhaId() != null) {
+
             TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilhaId())
                     .orElseThrow(() -> new RuntimeException("Trilha não encontrada"));
+
             modulo.setTrilha(trilha);
         }
 
+
+        // Atualiza conteúdos
+        if (dto.getConteudos() != null) {
+
+            modulo.getConteudos().clear();
+
+            List<ConteudoEntity> conteudos = dto.getConteudos()
+                    .stream()
+                    .map(c -> {
+
+                        ConteudoEntity conteudo = new ConteudoEntity();
+
+                        conteudo.setTipo(c.getTipo());
+                        conteudo.setTitulo(c.getTitulo());
+                        conteudo.setValor(c.getValor());
+                        conteudo.setModulo(modulo);
+
+                        return conteudo;
+
+                    })
+                    .collect(Collectors.toList());
+
+
+            modulo.getConteudos().addAll(conteudos);
+        }
+
+
+        // Atualiza questões
+        if (dto.getQuestoes() != null) {
+
+            modulo.getQuestoes().clear();
+
+
+            List<QuestaoEntity> questoes = dto.getQuestoes()
+                    .stream()
+                    .map(q -> {
+
+
+                        QuestaoEntity questao = new QuestaoEntity();
+
+                        questao.setTipo(q.getTipo());
+                        questao.setEnunciado(q.getEnunciado());
+                        questao.setXp(q.getXp());
+                        questao.setModulo(modulo);
+
+
+                        if (q.getAlternativas() != null) {
+
+
+                            List<AlternativaEntity> alternativas =
+                                    q.getAlternativas()
+                                            .stream()
+                                            .map(a -> {
+
+
+                                                AlternativaEntity alternativa =
+                                                        new AlternativaEntity();
+
+
+                                                alternativa.setTexto(a.getTexto());
+                                                alternativa.setCorreta(a.isCorreta());
+                                                alternativa.setQuestao(questao);
+
+
+                                                return alternativa;
+
+
+                                            })
+                                            .collect(Collectors.toList());
+
+
+                            questao.setAlternativas(alternativas);
+                        }
+
+
+                        return questao;
+
+
+                    })
+                    .collect(Collectors.toList());
+
+
+            modulo.getQuestoes().addAll(questoes);
+        }
+
+
         ModuloEntity salvo = repository.save(modulo);
 
+
         return ModuloDTO.builder()
+
                 .id(salvo.getId())
+
                 .nome(salvo.getNome())
+
                 .descricao(salvo.getDescricao())
+
                 .cargaHoraria(salvo.getCargaHoraria())
+
                 .xpAoConcluir(salvo.getXpAoConcluir())
-                .trilha(TrilhaResumoDTO.builder()
-                        .id(salvo.getTrilha().getId())
-                        .nome(salvo.getTrilha().getNome())
-                        .build())
+
+
+                .trilha(
+                        salvo.getTrilha() != null
+                                ?
+                                TrilhaResumoDTO.builder()
+                                        .id(salvo.getTrilha().getId())
+                                        .nome(salvo.getTrilha().getNome())
+                                        .build()
+                                :
+                                null
+                )
+
+
+                .questoes(
+                        converterQuestoes(salvo.getQuestoes())
+                )
+
+
                 .build();
     }
 
@@ -211,6 +344,7 @@ public class ModuloService {
                             QuestaoDTO questao = new QuestaoDTO();
 
                             questao.setTipo(q.getTipo());
+                            questao.setTipoDescricao(q.getTipo().getDescricao());
                             questao.setEnunciado(q.getEnunciado());
                             questao.setXp(q.getXp());
 

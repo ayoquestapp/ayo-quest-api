@@ -12,6 +12,8 @@ public class QuestaoDTO {
 
     private TipoQuestao tipo;
 
+    private String tipoDescricao;
+
     private String enunciado;
 
     private Integer xp;
