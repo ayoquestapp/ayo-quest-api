@@ -4,6 +4,9 @@ import lombok.Data;
 
 @Data
 public class AlternativaDTO {
+
+    private Long id;
     private String texto;
     private boolean correta;
+
 }

@@ -1,9 +1,6 @@
 package br.com.ayo_quest.ayo_quest.controller;
 
-import br.com.ayo_quest.ayo_quest.dto.ModuloAtualizacaoDTO;
-import br.com.ayo_quest.ayo_quest.dto.ModuloCadastroDTO;
-import br.com.ayo_quest.ayo_quest.dto.ModuloDTO;
-import br.com.ayo_quest.ayo_quest.dto.ModuloResponseDTO;
+import br.com.ayo_quest.ayo_quest.dto.*;
 import br.com.ayo_quest.ayo_quest.dto.resolver.ModuloResolverDTO;
 import br.com.ayo_quest.ayo_quest.models.ModuloEntity;
 import br.com.ayo_quest.ayo_quest.service.ModuloService;
@@ -12,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/modulos")
@@ -70,6 +68,13 @@ public class ModuloController {
     @GetMapping("/{id}/resolver")
     public ResponseEntity<ModuloResolverDTO> buscarPorIdResolver(@PathVariable Long id) {
         return ResponseEntity.ok(service.buscarModuloResolver(id));
+    }
+
+    @PostMapping("/{id}/conferir")
+    public ResponseEntity<ResultadoModuloDTO> conferir(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> respostas) {
+        return ResponseEntity.ok(service.conferirRespostas(id, respostas));
     }
 
 }
