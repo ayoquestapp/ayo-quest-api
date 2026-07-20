@@ -38,9 +38,9 @@ public class ModuloService {
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
 
-        if (dto.getTrilha() != null) {
+        if (dto.getTrilhaId() != null) {
 
-            TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilha().getId())
+            TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilhaId())
                     .orElseThrow(() ->
                             new RuntimeException("Trilha não encontrada"));
 
