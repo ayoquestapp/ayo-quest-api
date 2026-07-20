@@ -16,4 +16,6 @@ LEFT JOIN FETCH t.modulos
 """)
     List<TrilhaEntity> listarComModulos();
 
+    List<TrilhaEntity> findByNomeContainingIgnoreCase(String nome);
+
 }

@@ -58,5 +58,12 @@ public class TrilhaController {
 
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/buscar")
+    public ResponseEntity<List<TrilhaDTO>> buscar(
+            @RequestParam String nome
+    ) {
+        return ResponseEntity.ok(trilhaService.buscar(nome));
+    }
 }
 
