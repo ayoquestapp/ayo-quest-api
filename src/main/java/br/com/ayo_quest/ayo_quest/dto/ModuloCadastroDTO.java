@@ -15,7 +15,7 @@ public class ModuloCadastroDTO {
 
     private Long xpAoConcluir;
 
-    private TrilhaDTO trilha;
+    private Long trilhaId;
 
     private List<ConteudoDTO> conteudos;
 

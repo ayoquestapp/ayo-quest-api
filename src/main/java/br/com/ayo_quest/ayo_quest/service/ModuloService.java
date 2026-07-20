@@ -5,6 +5,7 @@ import br.com.ayo_quest.ayo_quest.dto.resolver.AlternativaResolverDTO;
 import br.com.ayo_quest.ayo_quest.dto.resolver.ConteudoResolverDTO;
 import br.com.ayo_quest.ayo_quest.dto.resolver.ModuloResolverDTO;
 import br.com.ayo_quest.ayo_quest.dto.resolver.QuestaoResolverDTO;
+import br.com.ayo_quest.ayo_quest.enuns.TipoQuestao;
 import br.com.ayo_quest.ayo_quest.models.*;
 import br.com.ayo_quest.ayo_quest.repository.ModuloRepository;
 import br.com.ayo_quest.ayo_quest.repository.TrilhaRepository;
@@ -12,6 +13,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import java.util.List;
@@ -36,9 +38,9 @@ public class ModuloService {
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
 
-        if (dto.getTrilha() != null) {
+        if (dto.getTrilhaId() != null) {
 
-            TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilha().getId())
+            TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilhaId())
                     .orElseThrow(() ->
                             new RuntimeException("Trilha não encontrada"));
 
@@ -347,6 +349,7 @@ public class ModuloService {
                             questao.setTipoDescricao(q.getTipo().getDescricao());
                             questao.setEnunciado(q.getEnunciado());
                             questao.setXp(q.getXp());
+                            questao.setId(q.getId());
 
                             questao.setAlternativas(
                                     q.getAlternativas()
@@ -355,6 +358,7 @@ public class ModuloService {
 
                                                 AlternativaDTO alternativa = new AlternativaDTO();
 
+                                                alternativa.setId(a.getId());
                                                 alternativa.setTexto(a.getTexto());
                                                 alternativa.setCorreta(a.isCorreta());
 
@@ -477,8 +481,11 @@ public class ModuloService {
                                     .stream()
                                     .map(a -> {
                                         AlternativaDTO alt = new AlternativaDTO();
+
+                                        alt.setId(a.getId());
                                         alt.setTexto(a.getTexto());
                                         alt.setCorreta(a.isCorreta());
+
                                         return alt;
                                     })
                                     .toList()
@@ -487,5 +494,170 @@ public class ModuloService {
                     return dto;
                 })
                 .toList();
+    }
+
+    public ResultadoModuloDTO conferirRespostas(
+            Long moduloId,
+            Map<String,Object> respostasEnviadas
+    ){
+
+        ModuloEntity modulo = repository.findById(moduloId)
+                .orElseThrow(() ->
+                        new RuntimeException("Módulo não encontrado")
+                );
+
+
+        int acertos = 0;
+
+        int totalQuestoes = modulo.getQuestoes().size();
+
+
+        for(QuestaoEntity questao : modulo.getQuestoes()) {
+
+            String key = String.valueOf(questao.getId());
+
+            Object respostaUser = respostasEnviadas.get(key);
+
+            boolean acertou = validarResposta(questao, respostaUser);
+
+
+            System.out.println("==============================");
+            System.out.println("QUESTÃO: " + questao.getId());
+            System.out.println("TIPO: " + questao.getTipo());
+            System.out.println("RESPOSTA USUARIO: " + respostaUser);
+            System.out.println("RESULTADO: " + acertou);
+
+
+            if(!acertou){
+
+                System.out.println("ALTERNATIVAS DO BANCO:");
+
+                questao.getAlternativas()
+                        .forEach(a ->
+                                System.out.println(
+                                        "ID: " + a.getId()
+                                                + " TEXTO: " + a.getTexto()
+                                                + " CORRETA: " + a.isCorreta()
+                                )
+                        );
+            }
+
+
+            if(acertou){
+                acertos++;
+            }
+        }
+
+
+        double nota = totalQuestoes > 0
+                ? ((double) acertos / totalQuestoes) * 10
+                : 0;
+
+
+        boolean aprovado = nota >= 7;
+
+
+        int xpGanho = aprovado
+                ? modulo.getXpAoConcluir().intValue()
+                : (int)(modulo.getXpAoConcluir()*0.1);
+
+
+
+        ResultadoModuloDTO resultado = new ResultadoModuloDTO();
+
+        resultado.setAcertos(acertos);
+        resultado.setErros(totalQuestoes-acertos);
+        resultado.setXpGanho(xpGanho);
+        resultado.setNota(nota);
+        resultado.setAprovado(aprovado);
+
+
+        return resultado;
+    }
+
+    private boolean validarResposta(QuestaoEntity questao, Object respostaUser) {
+
+        if (respostaUser == null) {
+            return false;
+        }
+
+
+        if (questao.getTipo() == TipoQuestao.MULTIPLA_ESCOLHA) {
+
+            return questao.getAlternativas()
+                    .stream()
+                    .anyMatch(a ->
+                            a.isCorreta()
+                                    &&
+                                    String.valueOf(a.getId())
+                                            .equals(String.valueOf(respostaUser))
+                    );
+        }
+
+        if (questao.getTipo() == TipoQuestao.VERDADEIRO_FALSO) {
+
+            boolean resposta =
+                    Boolean.parseBoolean(
+                            String.valueOf(respostaUser)
+                    );
+
+
+            return questao.getAlternativas()
+                    .stream()
+                    .anyMatch(a ->
+                            a.isCorreta()
+                                    &&
+                                    (
+                                            resposta && a.getTexto().trim().equalsIgnoreCase("Verdadeiro")
+                                                    ||
+                                                    !resposta && a.getTexto().trim().equalsIgnoreCase("Falso")
+                                    )
+                    );
+        }
+
+
+        if (questao.getTipo() == TipoQuestao.CAIXAS_SELECAO) {
+
+
+            if (!(respostaUser instanceof Map)) {
+                return false;
+            }
+
+
+            Map<String, Boolean> respostas =
+                    (Map<String, Boolean>) respostaUser;
+
+            java.util.Set<String> respostasMarcadasComoCorretas = respostas.entrySet()
+                .stream()
+                .filter(entry -> Boolean.TRUE.equals(entry.getValue()))
+                .map(Map.Entry::getKey)
+                .collect(java.util.stream.Collectors.toSet());
+
+            java.util.Set<String> alternativasCorretas = questao.getAlternativas()
+                    .stream()
+                    .filter(AlternativaEntity::isCorreta)
+                    .map(a -> String.valueOf(a.getId()))
+                    .collect(java.util.stream.Collectors.toSet());
+
+            return alternativasCorretas.equals(respostasMarcadasComoCorretas);
+        }
+
+        if (questao.getTipo() == TipoQuestao.QUESTAO_ABERTA) {
+
+
+            return questao.getAlternativas()
+                    .stream()
+                    .filter(AlternativaEntity::isCorreta)
+                    .anyMatch(a ->
+                            a.getTexto()
+                                    .equalsIgnoreCase(
+                                            String.valueOf(respostaUser)
+                                                    .trim()
+                                    )
+                    );
+
+        }
+
+        return false;
     }
 }
