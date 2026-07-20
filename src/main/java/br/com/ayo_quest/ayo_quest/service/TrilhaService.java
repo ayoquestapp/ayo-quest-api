@@ -105,4 +105,32 @@ public class TrilhaService {
         trilhaRepository.delete(trilha);
     }
 
+    public List<TrilhaDTO> buscar(String nome){
+
+        return trilhaRepository
+                .findByNomeContainingIgnoreCase(nome)
+                .stream()
+                .map(this::converterDTO)
+                .toList();
+
+    }
+
+    private TrilhaDTO converterDTO(TrilhaEntity trilha) {
+
+        return new TrilhaDTO(
+                trilha.getId(),
+                trilha.getNome(),
+                trilha.getCode(),
+                trilha.getDescricao(),
+                trilha.getModulos() != null
+                        ? trilha.getModulos().size()
+                        : 0,
+                trilha.getImagem(),
+                trilha.getTag(),
+                null,
+                null
+        );
+
+    }
+
 }
