@@ -11,9 +11,7 @@ public class ModuloAtualizacaoDTO {
     private String descricao;
     private Long cargaHoraria;
     private Long xpAoConcluir;
-
     private Long trilhaId;
-
     private List<ConteudoDTO> conteudos;
     private List<QuestaoDTO> questoes;
 

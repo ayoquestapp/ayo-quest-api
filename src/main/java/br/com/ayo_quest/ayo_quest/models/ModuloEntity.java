@@ -42,7 +42,6 @@ public class ModuloEntity {
     )
     private List<ConteudoEntity> conteudos = new ArrayList<>();
 
-
     @OneToMany(
             mappedBy = "modulo",
             cascade = CascadeType.ALL,
