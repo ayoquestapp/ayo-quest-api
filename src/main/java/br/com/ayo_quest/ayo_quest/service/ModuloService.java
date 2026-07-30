@@ -154,6 +154,16 @@ public class ModuloService {
                     })
                     .toList();
 
+            List<ConteudoDTO> conteudos = modulo.getConteudos()
+                    .stream()
+                    .map(c -> ConteudoDTO.builder()
+                            .id(c.getId())
+                            .tipo(c.getTipo())
+                            .titulo(c.getTitulo())
+                            .valor(c.getValor())
+                            .build())
+                    .toList();
+
             return new ModuloDTO(
                     modulo.getId(),
                     modulo.getNome(),
@@ -161,6 +171,7 @@ public class ModuloService {
                     modulo.getCargaHoraria(),
                     modulo.getXpAoConcluir(),
                     trilhaDTO,
+                    conteudos,
                     questoes
             );
 
@@ -185,14 +196,12 @@ public class ModuloService {
                 .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
 
 
-        // Dados básicos
         modulo.setNome(dto.getNome());
         modulo.setDescricao(dto.getDescricao());
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
 
 
-        // Atualiza trilha
         if (dto.getTrilhaId() != null) {
 
             TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilhaId())
@@ -201,8 +210,6 @@ public class ModuloService {
             modulo.setTrilha(trilha);
         }
 
-
-        // Atualiza conteúdos
         if (dto.getConteudos() != null) {
 
             modulo.getConteudos().clear();
@@ -210,16 +217,12 @@ public class ModuloService {
             List<ConteudoEntity> conteudos = dto.getConteudos()
                     .stream()
                     .map(c -> {
-
                         ConteudoEntity conteudo = new ConteudoEntity();
-
                         conteudo.setTipo(c.getTipo());
                         conteudo.setTitulo(c.getTitulo());
                         conteudo.setValor(c.getValor());
                         conteudo.setModulo(modulo);
-
                         return conteudo;
-
                     })
                     .collect(Collectors.toList());
 
@@ -228,7 +231,6 @@ public class ModuloService {
         }
 
 
-        // Atualiza questões
         if (dto.getQuestoes() != null) {
 
             modulo.getQuestoes().clear();
@@ -410,10 +412,26 @@ public class ModuloService {
                                 m.getTrilha().getId(),
                                 m.getTrilha().getNome()
                         ),
+                        converterConteudos(m.getConteudos()),
                         converterQuestoes(m.getQuestoes())
                 ))
                 .toList();
+    }
 
+    private List<ConteudoDTO> converterConteudos(List<ConteudoEntity> conteudos) {
+
+        return conteudos.stream()
+                .map(c -> {
+                    ConteudoDTO dto = new ConteudoDTO();
+
+                    dto.setId(c.getId());
+                    dto.setTipo(c.getTipo());
+                    dto.setTitulo(c.getTitulo());
+                    dto.setValor(c.getValor());
+
+                    return dto;
+                })
+                .toList();
     }
 
     public ModuloResolverDTO buscarModuloResolver(Long id) {

@@ -18,5 +18,6 @@ public class ModuloDTO {
     private Long cargaHoraria;
     private Long xpAoConcluir;
     private TrilhaResumoDTO trilha;
+    private List<ConteudoDTO> conteudos;
     private List<QuestaoDTO> questoes;
 }
