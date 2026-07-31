@@ -18,6 +18,6 @@ public class QuestaoDTO {
 
     private Integer xp;
 
-    private List<AlternativaDTO> alternativas;
+    private List<Long> alternativasIds;
 
 }

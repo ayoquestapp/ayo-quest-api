@@ -13,4 +13,6 @@ public class AlternativaResolverDTO {
 
     private String texto;
 
+    private boolean correta;
+
 }

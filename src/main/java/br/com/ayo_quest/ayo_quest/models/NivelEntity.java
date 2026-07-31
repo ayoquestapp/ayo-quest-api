@@ -2,28 +2,27 @@ package br.com.ayo_quest.ayo_quest.models;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Entity
-@Table(name = "TBL_TRILHAS")
-public class TrilhaEntity {
+@Table(name = "tbl_nivel")
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+public class NivelEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nome;
-
-    private String code;
+    private String nomeNivel;
 
     private String descricao;
 
-    private String  imagem;
+    private Integer ordem;
 
-    private String tag;
-
+    private Boolean status;
 }

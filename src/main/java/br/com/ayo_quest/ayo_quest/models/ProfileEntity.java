@@ -29,4 +29,8 @@ public class ProfileEntity {
     private Integer level;
     private Instant created_at;
     private Instant updated_at;
+
+    @ManyToOne
+    @JoinColumn(name = "nivel_atual_id")
+    private NivelEntity nivelAtual;
 }

@@ -1,7 +1,6 @@
-package br.com.ayo_quest.ayo_quest.dto.resolver;
+package br.com.ayo_quest.ayo_quest.dto;
 
-
-import br.com.ayo_quest.ayo_quest.dto.ConteudoDTO;
+import br.com.ayo_quest.ayo_quest.dto.resolver.QuestaoResolverDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,13 +12,17 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class ModuloResolverDTO {
+public class ModuloCompletoDTO {
 
     private Long id;
     private String nome;
     private String descricao;
     private Long cargaHoraria;
     private Long xpAoConcluir;
+    private Long tempoMaximo;
+
+    private Long trilhaId;
+    private String nomeTrilha;
 
     private List<ConteudoDTO> conteudos;
 

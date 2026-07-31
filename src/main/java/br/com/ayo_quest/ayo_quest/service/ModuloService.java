@@ -1,5 +1,6 @@
 package br.com.ayo_quest.ayo_quest.service;
 
+
 import br.com.ayo_quest.ayo_quest.dto.*;
 import br.com.ayo_quest.ayo_quest.dto.resolver.AlternativaResolverDTO;
 import br.com.ayo_quest.ayo_quest.dto.resolver.ConteudoResolverDTO;
@@ -7,29 +8,33 @@ import br.com.ayo_quest.ayo_quest.dto.resolver.ModuloResolverDTO;
 import br.com.ayo_quest.ayo_quest.dto.resolver.QuestaoResolverDTO;
 import br.com.ayo_quest.ayo_quest.enuns.TipoQuestao;
 import br.com.ayo_quest.ayo_quest.models.*;
-import br.com.ayo_quest.ayo_quest.repository.ModuloRepository;
-import br.com.ayo_quest.ayo_quest.repository.TrilhaRepository;
+import br.com.ayo_quest.ayo_quest.repository.*;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class ModuloService {
 
-    @Autowired
-    private TrilhaRepository trilhaRepository;
 
-    @Autowired
-    private ModuloRepository repository;
+    private final ModuloRepository moduloRepository;
+    private final ModuloImpl moduloImpl;
+    private final QuestaoRepository questaoRepository;
+    private final ConteudoRepository conteudoRepository;
+    private final AlternativaRepository alternativaRepository;
+    private final TrilhaRepository trilhaRepository;
+
 
     @Transactional
-    public ModuloEntity salvar(ModuloCadastroDTO dto) {
+    public ModuloResponseDTO salvar(ModuloCadastroDTO dto) {
 
         ModuloEntity modulo = new ModuloEntity();
 
@@ -37,440 +42,146 @@ public class ModuloService {
         modulo.setDescricao(dto.getDescricao());
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
+        modulo.setTempoMaximo(dto.getTempoMaximo());
 
-        if (dto.getTrilhaId() != null) {
 
-            TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilhaId())
-                    .orElseThrow(() ->
-                            new RuntimeException("Trilha não encontrada"));
+        ModuloEntity moduloSalvo = moduloRepository.save(modulo);
 
-            modulo.setTrilha(trilha);
+        if (dto.getConteudos_ids() != null) {
+
+            List<ConteudoEntity> conteudos =
+                    conteudoRepository.findAllById(dto.getConteudos_ids());
+
+            conteudos.forEach(conteudo -> {
+                conteudo.setModulo(moduloSalvo);
+            });
+
+            conteudoRepository.saveAll(conteudos);
         }
 
-        if (dto.getConteudos() != null && !dto.getConteudos().isEmpty()) {
 
-            List<ConteudoEntity> conteudos = dto.getConteudos()
-                    .stream()
-                    .map(c -> {
+        if (dto.getQuestoes_ids() != null) {
 
-                        ConteudoEntity conteudo = new ConteudoEntity();
+            List<QuestaoEntity> questoes =
+                    questaoRepository.findAllById(dto.getQuestoes_ids());
 
-                        conteudo.setTipo(c.getTipo());
-                        conteudo.setTitulo(c.getTitulo());
-                        conteudo.setValor(c.getValor());
-                        conteudo.setModulo(modulo);
+            questoes.forEach(questao -> {
+                questao.setModulo(moduloSalvo);
+            });
 
-                        return conteudo;
-
-                    })
-                    .collect(Collectors.toList());
-
-            modulo.setConteudos(conteudos);
+            questaoRepository.saveAll(questoes);
         }
 
-        // Questões
-        if (dto.getQuestoes() != null && !dto.getQuestoes().isEmpty()) {
 
-            List<QuestaoEntity> questoes = dto.getQuestoes()
-                    .stream()
-                    .map(q -> {
-
-                        QuestaoEntity questao = new QuestaoEntity();
-
-                        questao.setEnunciado(q.getEnunciado());
-                        questao.setTipo(q.getTipo());
-                        questao.setXp(q.getXp());
-                        questao.setModulo(modulo);
-
-                        if (q.getAlternativas() != null && !q.getAlternativas().isEmpty()) {
-
-                            List<AlternativaEntity> alternativas = q.getAlternativas()
-                                    .stream()
-                                    .map(a -> {
-
-                                        AlternativaEntity alternativa = new AlternativaEntity();
-
-                                        alternativa.setTexto(a.getTexto());
-                                        alternativa.setCorreta(a.isCorreta());
-
-                                        // relacionamento
-                                        alternativa.setQuestao(questao);
-
-                                        return alternativa;
-
-                                    })
-                                    .collect(Collectors.toList());
-
-                            questao.setAlternativas(alternativas);
-                        }
-
-                        return questao;
-
-                    })
-                    .collect(Collectors.toList());
-
-            modulo.setQuestoes(questoes);
-        }
-
-        return repository.save(modulo);
+        return buscarPorId(moduloSalvo.getId());
     }
 
     public List<ModuloDTO> listar() {
-
-        List<ModuloEntity> modulos = repository.listarComTrilha();
-
-        return modulos.stream().map(modulo -> {
-
-            TrilhaResumoDTO trilhaDTO = null;
-
-            if (modulo.getTrilha() != null) {
-                trilhaDTO = new TrilhaResumoDTO(
-                        modulo.getTrilha().getId(),
-                        modulo.getTrilha().getNome()
-                );
-            }
-
-            List<QuestaoDTO> questoes = modulo.getQuestoes()
-                    .stream()
-                    .map(q -> {
-                        QuestaoDTO dto = new QuestaoDTO();
-                        dto.setEnunciado(q.getEnunciado());
-                        dto.setTipo(q.getTipo());
-                        dto.setXp(q.getXp());
-
-                        dto.setAlternativas(
-                                q.getAlternativas()
-                                        .stream()
-                                        .map(a -> {
-                                            AlternativaDTO alt = new AlternativaDTO();
-                                            alt.setTexto(a.getTexto());
-                                            alt.setCorreta(a.isCorreta());
-                                            return alt;
-                                        })
-                                        .toList()
-                        );
-
-                        return dto;
-                    })
-                    .toList();
-
-            List<ConteudoDTO> conteudos = modulo.getConteudos()
-                    .stream()
-                    .map(c -> ConteudoDTO.builder()
-                            .id(c.getId())
-                            .tipo(c.getTipo())
-                            .titulo(c.getTitulo())
-                            .valor(c.getValor())
-                            .build())
-                    .toList();
-
-            return new ModuloDTO(
-                    modulo.getId(),
-                    modulo.getNome(),
-                    modulo.getDescricao(),
-                    modulo.getCargaHoraria(),
-                    modulo.getXpAoConcluir(),
-                    trilhaDTO,
-                    conteudos,
-                    questoes
-            );
-
-        }).toList();
+        return moduloImpl.getAllModulos();
     }
 
     @Transactional
-    public void deletarModulo(Long id) {
+    public ModuloResponseDTO atualizar(Long id, ModuloAtualizacaoDTO dto) {
 
-        ModuloEntity modulo = repository.findById(id)
-                .orElseThrow(() ->
-                        new RuntimeException("Módulo não encontrado")
-                );
-
-        repository.delete(modulo);
-    }
-
-    @Transactional
-    public ModuloDTO atualizar(Long id, ModuloAtualizacaoDTO dto) {
-
-        ModuloEntity modulo = repository.findById(id)
+        ModuloEntity modulo = moduloRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
-
 
         modulo.setNome(dto.getNome());
         modulo.setDescricao(dto.getDescricao());
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
 
-
         if (dto.getTrilhaId() != null) {
 
             TrilhaEntity trilha = trilhaRepository.findById(dto.getTrilhaId())
                     .orElseThrow(() -> new RuntimeException("Trilha não encontrada"));
 
-            modulo.setTrilha(trilha);
+            modulo.setTrilhaId(dto.getTrilhaId());
         }
 
-        if (dto.getConteudos() != null) {
+        moduloRepository.save(modulo);
 
-            modulo.getConteudos().clear();
+        if (dto.getConteudos_ids() != null) {
 
-            List<ConteudoEntity> conteudos = dto.getConteudos()
-                    .stream()
-                    .map(c -> {
-                        ConteudoEntity conteudo = new ConteudoEntity();
-                        conteudo.setTipo(c.getTipo());
-                        conteudo.setTitulo(c.getTitulo());
-                        conteudo.setValor(c.getValor());
-                        conteudo.setModulo(modulo);
-                        return conteudo;
-                    })
-                    .collect(Collectors.toList());
+            List<ConteudoEntity> conteudos =
+                    conteudoRepository.findAllById(dto.getConteudos_ids());
 
+            conteudos.forEach(conteudo ->
+                    conteudo.setModulo(modulo)
+            );
 
-            modulo.getConteudos().addAll(conteudos);
+            conteudoRepository.saveAll(conteudos);
         }
 
+        if (dto.getQuestoes_ids() != null) {
 
-        if (dto.getQuestoes() != null) {
+            List<QuestaoEntity> questoes =
+                    questaoRepository.findAllById(dto.getQuestoes_ids());
 
-            modulo.getQuestoes().clear();
+            questoes.forEach(questao ->
+                    questao.setModulo(modulo)
+            );
 
-
-            List<QuestaoEntity> questoes = dto.getQuestoes()
-                    .stream()
-                    .map(q -> {
-
-
-                        QuestaoEntity questao = new QuestaoEntity();
-
-                        questao.setTipo(q.getTipo());
-                        questao.setEnunciado(q.getEnunciado());
-                        questao.setXp(q.getXp());
-                        questao.setModulo(modulo);
-
-
-                        if (q.getAlternativas() != null) {
-
-
-                            List<AlternativaEntity> alternativas =
-                                    q.getAlternativas()
-                                            .stream()
-                                            .map(a -> {
-
-
-                                                AlternativaEntity alternativa =
-                                                        new AlternativaEntity();
-
-
-                                                alternativa.setTexto(a.getTexto());
-                                                alternativa.setCorreta(a.isCorreta());
-                                                alternativa.setQuestao(questao);
-
-
-                                                return alternativa;
-
-
-                                            })
-                                            .collect(Collectors.toList());
-
-
-                            questao.setAlternativas(alternativas);
-                        }
-
-
-                        return questao;
-
-
-                    })
-                    .collect(Collectors.toList());
-
-
-            modulo.getQuestoes().addAll(questoes);
+            questaoRepository.saveAll(questoes);
         }
 
+        return buscarPorId(id);
+    }
 
-        ModuloEntity salvo = repository.save(modulo);
+    @Transactional
+    public void deletarModulo(Long id) {
+        ModuloEntity modulo = moduloRepository.findById(id).orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
 
+        List<QuestaoEntity> questoes = questaoRepository.findByModuloId(id);
+        questoes.forEach(questao -> {
+            alternativaRepository.deleteByQuestaoId(questao.getId());
+            questaoRepository.delete(questao);
+        });
 
-        return ModuloDTO.builder()
+        List<ConteudoEntity> conteudos = conteudoRepository.findByModuloId(id);
+        conteudoRepository.deleteAll(conteudos);
 
-                .id(salvo.getId())
-
-                .nome(salvo.getNome())
-
-                .descricao(salvo.getDescricao())
-
-                .cargaHoraria(salvo.getCargaHoraria())
-
-                .xpAoConcluir(salvo.getXpAoConcluir())
-
-
-                .trilha(
-                        salvo.getTrilha() != null
-                                ?
-                                TrilhaResumoDTO.builder()
-                                        .id(salvo.getTrilha().getId())
-                                        .nome(salvo.getTrilha().getNome())
-                                        .build()
-                                :
-                                null
-                )
-
-
-                .questoes(
-                        converterQuestoes(salvo.getQuestoes())
-                )
-
-
-                .build();
+        moduloRepository.delete(modulo);
     }
 
     public ModuloResponseDTO buscarPorId(Long id) {
-
-        ModuloEntity modulo = repository.findById(id)
+        ModuloEntity modulo = moduloRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
 
-
         ModuloResponseDTO dto = new ModuloResponseDTO();
-
         dto.setId(modulo.getId());
         dto.setNome(modulo.getNome());
         dto.setDescricao(modulo.getDescricao());
         dto.setCargaHoraria(modulo.getCargaHoraria());
         dto.setXpAoConcluir(modulo.getXpAoConcluir());
 
+        List<Long> conteudosIds = conteudoRepository.findByModuloId(id)
+                .stream()
+                .map(ConteudoEntity::getId)
+                .collect(Collectors.toList());
+        dto.setConteudosIds(conteudosIds);
 
-        dto.setQuestoes(
-                modulo.getQuestoes()
-                        .stream()
-                        .map(q -> {
-
-                            QuestaoDTO questao = new QuestaoDTO();
-
-                            questao.setTipo(q.getTipo());
-                            questao.setTipoDescricao(q.getTipo().getDescricao());
-                            questao.setEnunciado(q.getEnunciado());
-                            questao.setXp(q.getXp());
-                            questao.setId(q.getId());
-
-                            questao.setAlternativas(
-                                    q.getAlternativas()
-                                            .stream()
-                                            .map(a -> {
-
-                                                AlternativaDTO alternativa = new AlternativaDTO();
-
-                                                alternativa.setId(a.getId());
-                                                alternativa.setTexto(a.getTexto());
-                                                alternativa.setCorreta(a.isCorreta());
-
-                                                return alternativa;
-
-                                            })
-                                            .toList()
-                            );
-
-                            return questao;
-
-                        })
-                        .toList()
-        );
-        dto.setConteudos(
-                modulo.getConteudos()
-                        .stream()
-                        .map(c -> {
-
-                            ConteudoDTO conteudo = new ConteudoDTO();
-
-                            conteudo.setId(c.getId());
-                            conteudo.setTipo(c.getTipo());
-                            conteudo.setTitulo(c.getTitulo());
-                            conteudo.setValor(c.getValor());
-
-                            return conteudo;
-
-                        })
-                        .toList()
-        );
-
+        List<Long> questoesIds = questaoRepository.findByModuloId(id)
+                .stream()
+                .map(QuestaoEntity::getId)
+                .collect(Collectors.toList());
+        dto.setQuestoesIds(questoesIds);
 
         return dto;
     }
 
+
     public List<ModuloDTO> buscarPorTrilha(Long id) {
-
-        return repository
-                .findByTrilhaId(id)
-                .stream()
-                .map(m -> new ModuloDTO(
-                        m.getId(),
-                        m.getNome(),
-                        m.getDescricao(),
-                        m.getCargaHoraria(),
-                        m.getXpAoConcluir(),
-                        new TrilhaResumoDTO(
-                                m.getTrilha().getId(),
-                                m.getTrilha().getNome()
-                        ),
-                        converterConteudos(m.getConteudos()),
-                        converterQuestoes(m.getQuestoes())
-                ))
-                .toList();
-    }
-
-    private List<ConteudoDTO> converterConteudos(List<ConteudoEntity> conteudos) {
-
-        return conteudos.stream()
-                .map(c -> {
-                    ConteudoDTO dto = new ConteudoDTO();
-
-                    dto.setId(c.getId());
-                    dto.setTipo(c.getTipo());
-                    dto.setTitulo(c.getTitulo());
-                    dto.setValor(c.getValor());
-
-                    return dto;
-                })
-                .toList();
+        return moduloRepository.buscarPorTrilha(id);
     }
 
     public ModuloResolverDTO buscarModuloResolver(Long id) {
 
-        ModuloEntity modulo = repository.findById(id)
+        ModuloEntity modulo = moduloRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Módulo não encontrado"));
 
-        List<ConteudoResolverDTO> conteudos = modulo.getConteudos()
-                .stream()
-                .map(c -> new ConteudoResolverDTO(
-                        c.getId(),
-                        c.getTipo(),
-                        c.getValor()
-                ))
-                .toList();
-
-        List<QuestaoResolverDTO> questoes = modulo.getQuestoes()
-                .stream()
-                .map(q -> {
-
-                    List<AlternativaResolverDTO> alternativas =
-                            q.getAlternativas()
-                                    .stream()
-                                    .map(a -> new AlternativaResolverDTO(
-                                            a.getId(),
-                                            a.getTexto()
-                                    ))
-                                    .toList();
-
-                    return new QuestaoResolverDTO(
-                            q.getId(),
-                            q.getEnunciado(),
-                            q.getTipo(),
-                            q.getXp(),
-                            alternativas
-                    );
-
-                })
-                .toList();
+        List<ConteudoDTO> conteudos = moduloImpl.buscarConteudosPorModulo(id);
+        List<QuestaoResolverDTO> questoes = moduloImpl.buscarQuestoesPorModulo(id);
 
         return new ModuloResolverDTO(
                 modulo.getId(),
@@ -481,111 +192,57 @@ public class ModuloService {
                 conteudos,
                 questoes
         );
-
-    }
-
-    private List<QuestaoDTO> converterQuestoes(List<QuestaoEntity> questoes) {
-
-        return questoes.stream()
-                .map(q -> {
-
-                    QuestaoDTO dto = new QuestaoDTO();
-                    dto.setEnunciado(q.getEnunciado());
-                    dto.setTipo(q.getTipo());
-                    dto.setXp(q.getXp());
-
-                    dto.setAlternativas(
-                            q.getAlternativas()
-                                    .stream()
-                                    .map(a -> {
-                                        AlternativaDTO alt = new AlternativaDTO();
-
-                                        alt.setId(a.getId());
-                                        alt.setTexto(a.getTexto());
-                                        alt.setCorreta(a.isCorreta());
-
-                                        return alt;
-                                    })
-                                    .toList()
-                    );
-
-                    return dto;
-                })
-                .toList();
     }
 
     public ResultadoModuloDTO conferirRespostas(
-            Long moduloId,
-            Map<String,Object> respostasEnviadas
-    ){
+            Long id,
+            Map<String, Object> respostas
+    ) {
 
-        ModuloEntity modulo = repository.findById(moduloId)
-                .orElseThrow(() ->
-                        new RuntimeException("Módulo não encontrado")
-                );
+        List<QuestaoResolverDTO> questoes =
+                moduloImpl.buscarQuestoesParaValidacao(id);
 
 
         int acertos = 0;
 
-        int totalQuestoes = modulo.getQuestoes().size();
+
+        for (QuestaoResolverDTO questao : questoes) {
+
+            Object respostaUsuario =
+                    respostas.get(
+                            String.valueOf(questao.getId())
+                    );
 
 
-        for(QuestaoEntity questao : modulo.getQuestoes()) {
-
-            String key = String.valueOf(questao.getId());
-
-            Object respostaUser = respostasEnviadas.get(key);
-
-            boolean acertou = validarResposta(questao, respostaUser);
+            boolean acertou =
+                    validarResposta(
+                            questao,
+                            respostaUsuario
+                    );
 
 
-            System.out.println("==============================");
-            System.out.println("QUESTÃO: " + questao.getId());
-            System.out.println("TIPO: " + questao.getTipo());
-            System.out.println("RESPOSTA USUARIO: " + respostaUser);
-            System.out.println("RESULTADO: " + acertou);
-
-
-            if(!acertou){
-
-                System.out.println("ALTERNATIVAS DO BANCO:");
-
-                questao.getAlternativas()
-                        .forEach(a ->
-                                System.out.println(
-                                        "ID: " + a.getId()
-                                                + " TEXTO: " + a.getTexto()
-                                                + " CORRETA: " + a.isCorreta()
-                                )
-                        );
-            }
-
-
-            if(acertou){
+            if (acertou) {
                 acertos++;
             }
         }
 
 
-        double nota = totalQuestoes > 0
-                ? ((double) acertos / totalQuestoes) * 10
-                : 0;
+        int totalQuestoes = questoes.size();
+
+
+        double nota =
+                totalQuestoes > 0
+                        ? ((double) acertos / totalQuestoes) * 10
+                        : 0;
 
 
         boolean aprovado = nota >= 7;
 
 
-        int xpGanho = aprovado
-                ? modulo.getXpAoConcluir().intValue()
-                : (int)(modulo.getXpAoConcluir()*0.1);
-
-
-
         ResultadoModuloDTO resultado = new ResultadoModuloDTO();
 
         resultado.setAcertos(acertos);
-        resultado.setErros(totalQuestoes-acertos);
-        resultado.setXpGanho(xpGanho);
+        resultado.setErros(totalQuestoes - acertos);
         resultado.setNota(nota);
         resultado.setAprovado(aprovado);
 
@@ -593,14 +250,17 @@ public class ModuloService {
         return resultado;
     }
 
-    private boolean validarResposta(QuestaoEntity questao, Object respostaUser) {
+    private boolean validarResposta(
+            QuestaoResolverDTO questao,
+            Object respostaUsuario
+    ) {
 
-        if (respostaUser == null) {
+        if(respostaUsuario == null){
             return false;
         }
 
 
-        if (questao.getTipo() == TipoQuestao.MULTIPLA_ESCOLHA) {
+        if(questao.getTipo() == TipoQuestao.MULTIPLA_ESCOLHA){
 
             return questao.getAlternativas()
                     .stream()
@@ -608,15 +268,18 @@ public class ModuloService {
                             a.isCorreta()
                                     &&
                                     String.valueOf(a.getId())
-                                            .equals(String.valueOf(respostaUser))
+                                            .equals(
+                                                    String.valueOf(respostaUsuario)
+                                            )
                     );
         }
 
-        if (questao.getTipo() == TipoQuestao.VERDADEIRO_FALSO) {
+
+        if(questao.getTipo() == TipoQuestao.VERDADEIRO_FALSO){
 
             boolean resposta =
                     Boolean.parseBoolean(
-                            String.valueOf(respostaUser)
+                            String.valueOf(respostaUsuario)
                     );
 
 
@@ -626,55 +289,64 @@ public class ModuloService {
                             a.isCorreta()
                                     &&
                                     (
-                                            resposta && a.getTexto().trim().equalsIgnoreCase("Verdadeiro")
+                                            resposta &&
+                                                    a.getTexto()
+                                                            .equalsIgnoreCase("Verdadeiro")
+
                                                     ||
-                                                    !resposta && a.getTexto().trim().equalsIgnoreCase("Falso")
+
+                                                    !resposta &&
+                                                            a.getTexto()
+                                                                    .equalsIgnoreCase("Falso")
                                     )
                     );
         }
 
 
-        if (questao.getTipo() == TipoQuestao.CAIXAS_SELECAO) {
+        if(questao.getTipo() == TipoQuestao.CAIXAS_SELECAO){
 
-
-            if (!(respostaUser instanceof Map)) {
+            if(!(respostaUsuario instanceof Map)){
                 return false;
             }
 
 
             Map<String, Boolean> respostas =
-                    (Map<String, Boolean>) respostaUser;
+                    (Map<String, Boolean>) respostaUsuario;
 
-            java.util.Set<String> respostasMarcadasComoCorretas = respostas.entrySet()
-                .stream()
-                .filter(entry -> Boolean.TRUE.equals(entry.getValue()))
-                .map(Map.Entry::getKey)
-                .collect(java.util.stream.Collectors.toSet());
 
-            java.util.Set<String> alternativasCorretas = questao.getAlternativas()
-                    .stream()
-                    .filter(AlternativaEntity::isCorreta)
-                    .map(a -> String.valueOf(a.getId()))
-                    .collect(java.util.stream.Collectors.toSet());
+            Set<String> marcadas =
+                    respostas.entrySet()
+                            .stream()
+                            .filter(e -> Boolean.TRUE.equals(e.getValue()))
+                            .map(Map.Entry::getKey)
+                            .collect(Collectors.toSet());
 
-            return alternativasCorretas.equals(respostasMarcadasComoCorretas);
+
+            Set<String> corretas =
+                    questao.getAlternativas()
+                            .stream()
+                            .filter(AlternativaResolverDTO::isCorreta)
+                            .map(a -> String.valueOf(a.getId()))
+                            .collect(Collectors.toSet());
+
+
+            return corretas.equals(marcadas);
         }
 
-        if (questao.getTipo() == TipoQuestao.QUESTAO_ABERTA) {
 
+        if(questao.getTipo() == TipoQuestao.QUESTAO_ABERTA){
 
             return questao.getAlternativas()
                     .stream()
-                    .filter(AlternativaEntity::isCorreta)
+                    .filter(AlternativaResolverDTO::isCorreta)
                     .anyMatch(a ->
                             a.getTexto()
                                     .equalsIgnoreCase(
-                                            String.valueOf(respostaUser)
-                                                    .trim()
+                                            String.valueOf(respostaUsuario).trim()
                                     )
                     );
-
         }
+
 
         return false;
     }

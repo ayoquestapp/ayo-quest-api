@@ -17,7 +17,7 @@ public class ModuloResponseDTO {
 
     private Long xpAoConcluir;
 
-    private List<ConteudoDTO> conteudos;
+    private List<Long> conteudosIds;
 
-    private List<QuestaoDTO> questoes;
+    private List<Long> questoesIds;
 }

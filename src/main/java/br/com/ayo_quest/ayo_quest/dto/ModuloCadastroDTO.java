@@ -17,9 +17,11 @@ public class ModuloCadastroDTO {
 
     private Long trilhaId;
 
-    private List<ConteudoDTO> conteudos;
+    private List<Long> conteudos_ids;
 
-    private List<QuestaoDTO> questoes;
+    private List<Long> questoes_ids;
+
+    private Long tempoMaximo;
 
 
 }

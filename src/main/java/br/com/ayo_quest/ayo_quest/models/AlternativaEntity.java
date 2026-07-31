@@ -23,8 +23,8 @@ public class AlternativaEntity {
 
     private boolean correta;
 
-    @ManyToOne
-    @JoinColumn(name = "questao_id")
-    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="questao_id")
     private QuestaoEntity questao;
+
 }

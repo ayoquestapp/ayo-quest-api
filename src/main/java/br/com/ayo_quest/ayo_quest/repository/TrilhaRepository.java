@@ -8,14 +8,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface TrilhaRepository extends JpaRepository<TrilhaEntity , Long> {
-
-    @Query("""
-SELECT DISTINCT t FROM TrilhaEntity t
-LEFT JOIN FETCH t.modulos
-""")
-    List<TrilhaEntity> listarComModulos();
-
+public interface TrilhaRepository extends JpaRepository<TrilhaEntity, Long> {
     List<TrilhaEntity> findByNomeContainingIgnoreCase(String nome);
 
 }
