@@ -25,7 +25,7 @@ public class ModuloController {
     ) {
 
         return ResponseEntity.ok(
-                service.salvar(dto)
+                service.criarModulo(dto)
         );
     }
 
@@ -45,7 +45,7 @@ public class ModuloController {
             @PathVariable Long id,
             @RequestBody ModuloAtualizacaoDTO dto) {
 
-        return ResponseEntity.ok(service.atualizar(id, dto));
+        return ResponseEntity.ok(service.atualizarModulo(id, dto));
     }
 
     @GetMapping("/{id}")

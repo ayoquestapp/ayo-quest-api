@@ -9,4 +9,5 @@ public class AlternativaDTO {
     private String texto;
     private boolean correta;
 
+
 }

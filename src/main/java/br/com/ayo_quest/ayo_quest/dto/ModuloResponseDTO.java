@@ -17,7 +17,9 @@ public class ModuloResponseDTO {
 
     private Long xpAoConcluir;
 
-    private List<Long> conteudosIds;
+    private Long tempoMaximo;
 
-    private List<Long> questoesIds;
+    private List<ConteudoDTO> conteudos;
+
+    private List<QuestaoDTO> questoes;
 }

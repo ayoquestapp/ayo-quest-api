@@ -12,7 +12,8 @@ public class ModuloAtualizacaoDTO {
     private Long cargaHoraria;
     private Long xpAoConcluir;
     private Long trilhaId;
-    private List<Long> conteudos_ids;
-    private List<Long> questoes_ids;
+    private Long tempoMaximo;
+    private List<ConteudoDTO> conteudos;
+    private List<QuestaoDTO> questoes;
 
 }
