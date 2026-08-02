@@ -4,16 +4,15 @@ import br.com.ayo_quest.ayo_quest.dto.tentativaModulo.EnviarRespostaDTO;
 import br.com.ayo_quest.ayo_quest.dto.tentativaModulo.RespostaQuestaoDTO;
 import br.com.ayo_quest.ayo_quest.dto.tentativaModulo.ResultadoRespostaDTO;
 import br.com.ayo_quest.ayo_quest.models.*;
-import br.com.ayo_quest.ayo_quest.repository.QuestaoRepository;
-import br.com.ayo_quest.ayo_quest.repository.RespostaAlternativaRepository;
-import br.com.ayo_quest.ayo_quest.repository.RespostaQuestaoRepository;
-import br.com.ayo_quest.ayo_quest.repository.TentativaModuloRepository;
+import br.com.ayo_quest.ayo_quest.repository.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +26,8 @@ public class RespostaService {
     private final RespostaQuestaoRepository respostaQuestaoRepository;
 
     private final RespostaAlternativaRepository respostaAlternativaRepository;
+
+    private final AlternativaRepository alternativaRepository;
 
 
     @Transactional
@@ -166,18 +167,26 @@ public class RespostaService {
     ){
 
 
+        List<AlternativaEntity> alternativas =
+                alternativaRepository
+                        .findByQuestaoId(questao.getId());
+
+
+
         Set<Long> corretas =
-                questao.getAlternativas()
+                alternativas
                         .stream()
                         .filter(AlternativaEntity::isCorreta)
                         .map(AlternativaEntity::getId)
-                        .collect(java.util.stream.Collectors.toSet());
+                        .collect(Collectors.toSet());
+
 
 
         Set<Long> marcadas =
                 new HashSet<>(
                         resposta.getAlternativas()
                 );
+
 
 
         return corretas.equals(marcadas);

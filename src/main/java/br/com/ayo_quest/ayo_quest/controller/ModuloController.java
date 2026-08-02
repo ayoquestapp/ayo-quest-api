@@ -20,12 +20,12 @@ public class ModuloController {
     private ModuloService service;
 
     @PostMapping("/cadastrar")
-    public ResponseEntity<ModuloEntity> salvar(
+    public ResponseEntity<ModuloResponseDTO> salvar(
             @RequestBody ModuloCadastroDTO dto
     ) {
 
         return ResponseEntity.ok(
-                service.salvar(dto)
+                service.criarModulo(dto)
         );
     }
 
@@ -41,11 +41,11 @@ public class ModuloController {
     }
 
     @PutMapping("alterar/{id}")
-    public ResponseEntity<ModuloDTO> atualizar(
+    public ResponseEntity<ModuloResponseDTO> atualizar(
             @PathVariable Long id,
             @RequestBody ModuloAtualizacaoDTO dto) {
 
-        return ResponseEntity.ok(service.atualizar(id, dto));
+        return ResponseEntity.ok(service.atualizarModulo(id, dto));
     }
 
     @GetMapping("/{id}")

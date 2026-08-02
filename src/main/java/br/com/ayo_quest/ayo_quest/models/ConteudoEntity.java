@@ -1,7 +1,6 @@
 package br.com.ayo_quest.ayo_quest.models;
 
 import br.com.ayo_quest.ayo_quest.enuns.TipoConteudo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -30,6 +29,5 @@ public class ConteudoEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "modulo_id")
-    @JsonIgnore
     private ModuloEntity modulo;
 }

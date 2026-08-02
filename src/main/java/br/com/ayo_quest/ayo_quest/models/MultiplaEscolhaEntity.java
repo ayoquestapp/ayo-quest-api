@@ -16,6 +16,6 @@ import java.util.List;
 @Entity
 public class MultiplaEscolhaEntity extends QuestaoEntity {
 
-    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "questao", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AlternativaEntity> alternativas;
 }

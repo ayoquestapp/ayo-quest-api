@@ -9,21 +9,19 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "TBL_TRILHAS")
-public class TrilhaEntity {
+@Table(name = "tbl_proficiencia")
+public class ProficienciaEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @ManyToOne
+    @JoinColumn(name = "nivel_id")
+    private NivelEntity nivel;
+
     private String nome;
 
-    private String code;
-
     private String descricao;
-
-    private String  imagem;
-
-    private String tag;
 
 }

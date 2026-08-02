@@ -1,23 +1,40 @@
 package br.com.ayo_quest.ayo_quest.dto;
 
 import br.com.ayo_quest.ayo_quest.enuns.TipoQuestao;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.List;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Entity
+@SqlResultSetMapping(name = "QuestaoDTOMapping", classes = @ConstructorResult(targetClass = QuestaoDTO.class,
+        columns = {
+                @ColumnResult(name = "id", type = Long.class),
+                @ColumnResult(name = "tipo", type = String.class),
+                @ColumnResult(name = "enunciado", type = String.class),
+                @ColumnResult(name = "xp", type = Integer.class)
+        })
+)
 public class QuestaoDTO {
-
+    @Id
     private Long id;
-
     private TipoQuestao tipo;
-
     private String tipoDescricao;
-
     private String enunciado;
-
     private Integer xp;
-
+    @Transient
     private List<AlternativaDTO> alternativas;
 
+    public QuestaoDTO(Long id, String tipo, String enunciado, Integer xp) {
+        this.id = id;
+        this.tipo = TipoQuestao.valueOf(tipo);
+        this.tipoDescricao = this.tipo.name();
+        this.enunciado = enunciado;
+        this.xp = xp;
+    }
 }

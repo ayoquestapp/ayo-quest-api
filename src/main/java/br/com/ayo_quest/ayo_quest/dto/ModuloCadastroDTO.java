@@ -1,6 +1,7 @@
 package br.com.ayo_quest.ayo_quest.dto;
 
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 
@@ -20,6 +21,8 @@ public class ModuloCadastroDTO {
     private List<ConteudoDTO> conteudos;
 
     private List<QuestaoDTO> questoes;
+
+    private Long tempoMaximo;
 
 
 }

@@ -16,4 +16,5 @@ public class ResultadoModuloDTO {
     private int xpGanho;
     private double nota;
     private boolean aprovado;
+    private Long totalQuestoes;
 }

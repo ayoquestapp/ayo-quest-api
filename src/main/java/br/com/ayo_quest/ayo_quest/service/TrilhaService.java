@@ -3,6 +3,7 @@ package br.com.ayo_quest.ayo_quest.service;
 import br.com.ayo_quest.ayo_quest.dto.TrilhaCreateDTO;
 import br.com.ayo_quest.ayo_quest.dto.TrilhaDTO;
 import br.com.ayo_quest.ayo_quest.dto.TrilhaUpdateDTO;
+import br.com.ayo_quest.ayo_quest.models.ModuloEntity;
 import br.com.ayo_quest.ayo_quest.models.TrilhaEntity;
 import br.com.ayo_quest.ayo_quest.repository.ModuloRepository;
 import br.com.ayo_quest.ayo_quest.repository.TrilhaRepository;
@@ -24,19 +25,48 @@ public class TrilhaService {
     private ModuloRepository moduloRepository;
 
     public List<TrilhaDTO> listar(){
-        List<TrilhaEntity> trilhas = trilhaRepository.listarComModulos();
 
-        return trilhas.stream().map(trilha -> new TrilhaDTO(
-                trilha.getId(),
-                trilha.getNome(),
-                trilha.getCode(),
-                trilha.getDescricao(),
-                trilha.getModulos().size(),
-                trilha.getImagem(),
-                trilha.getTag(),
-                null,
-                null
-        )).toList();
+
+        List<TrilhaEntity> trilhas =
+                trilhaRepository.findAll();
+
+
+
+        return trilhas.stream()
+                .map(trilha -> {
+
+
+                    Long quantidadeModulos =
+                            moduloRepository
+                                    .contarModulosPorTrilha(trilha.getId());
+
+
+
+                    return new TrilhaDTO(
+
+                            trilha.getId(),
+
+                            trilha.getNome(),
+
+                            trilha.getCode(),
+
+                            trilha.getDescricao(),
+
+                            quantidadeModulos.intValue(),
+
+                            trilha.getImagem(),
+
+                            trilha.getTag(),
+
+                            null,
+
+                            null
+                    );
+
+
+                })
+                .toList();
+
     }
 
     public TrilhaDTO detalhar(Long id) {
@@ -45,13 +75,16 @@ public class TrilhaService {
 
         Long cargaHoraria = moduloRepository.calcularCargaHorariaPorTrilha(id);
         Long xpTotal = moduloRepository.calcularXpTotalPorTrilha(id);
+        Long quantidadeModulos =
+                moduloRepository
+                        .contarModulosPorTrilha(trilha.getId());
 
         return new TrilhaDTO(
                 trilha.getId(),
                 trilha.getNome(),
                 trilha.getCode(),
                 trilha.getDescricao(),
-                trilha.getModulos().size(),
+                quantidadeModulos.intValue(),
                 trilha.getImagem(),
                 trilha.getTag(),
                 cargaHoraria,
@@ -110,21 +143,35 @@ public class TrilhaService {
         return trilhaRepository
                 .findByNomeContainingIgnoreCase(nome)
                 .stream()
-                .map(this::converterDTO)
+                .map(trilha -> {
+
+
+                    Long quantidadeModulos =
+                            moduloRepository
+                                    .contarModulosPorTrilha(trilha.getId());
+
+
+                    return converterDTO(
+                            trilha,
+                            quantidadeModulos.intValue()
+                    );
+
+                })
                 .toList();
 
     }
 
-    private TrilhaDTO converterDTO(TrilhaEntity trilha) {
+    private TrilhaDTO converterDTO(
+            TrilhaEntity trilha,
+            Integer quantidadeModulos
+    ) {
 
         return new TrilhaDTO(
                 trilha.getId(),
                 trilha.getNome(),
                 trilha.getCode(),
                 trilha.getDescricao(),
-                trilha.getModulos() != null
-                        ? trilha.getModulos().size()
-                        : 0,
+                quantidadeModulos,
                 trilha.getImagem(),
                 trilha.getTag(),
                 null,

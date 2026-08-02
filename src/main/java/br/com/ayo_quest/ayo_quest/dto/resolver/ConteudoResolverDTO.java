@@ -16,4 +16,6 @@ public class ConteudoResolverDTO {
 
     private String valor;
 
+    private String titulo;
+
 }
