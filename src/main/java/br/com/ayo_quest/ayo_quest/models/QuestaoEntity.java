@@ -32,5 +32,8 @@ public class QuestaoEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "proficiencia_id")
     private ProficienciaEntity proficiencia;
+
+    @Column(name = "tempo_por_questao")
+    private Integer tempoPorQuestao;
     
 }

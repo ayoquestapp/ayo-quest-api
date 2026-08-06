@@ -24,4 +24,6 @@ public class ProficienciaEntity {
 
     private String descricao;
 
+    private Long notaMinima;
+
 }

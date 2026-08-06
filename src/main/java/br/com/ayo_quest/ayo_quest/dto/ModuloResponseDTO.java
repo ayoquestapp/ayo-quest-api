@@ -17,7 +17,9 @@ public class ModuloResponseDTO {
 
     private Long xpAoConcluir;
 
-    private Long tempoMaximo;
+    private Long tempoPorQuestao;
+
+    private Long notaMinima;
 
     private List<ConteudoDTO> conteudos;
 

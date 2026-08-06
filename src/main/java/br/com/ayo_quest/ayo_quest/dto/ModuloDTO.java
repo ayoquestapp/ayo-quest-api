@@ -22,7 +22,6 @@ import java.util.List;
                         @FieldResult(name = "descricao", column = "descricao"),
                         @FieldResult(name = "cargaHoraria", column = "carga_horaria"),
                         @FieldResult(name = "xpAoConcluir", column = "xp_ao_concluir"),
-                        @FieldResult(name = "tempoMaximo", column = "tempo_maximo"),
                         @FieldResult(name = "trilhaId", column = "trilha_id"),
                         @FieldResult(name = "nomeTrilha", column = "nome_trilha")
                 }
@@ -43,5 +42,5 @@ public class ModuloDTO {
 
     @Transient
     private List<QuestaoDTO> questoes;
-    private Long tempoMaximo;
+
 }

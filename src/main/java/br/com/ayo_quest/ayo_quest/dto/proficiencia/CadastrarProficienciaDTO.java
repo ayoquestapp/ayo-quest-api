@@ -20,7 +20,7 @@ public class CadastrarProficienciaDTO {
 
     private String descricao;
 
-    private Integer notaMinima;
+    private Long notaMinima;
 
     private Integer totalQuestao;
 

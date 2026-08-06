@@ -1,5 +1,6 @@
 package br.com.ayo_quest.ayo_quest.dto;
 
+import br.com.ayo_quest.ayo_quest.enuns.TipoUsuario;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class DadosProfileDTO {
     private String txNomeExibicao;
     private String email;
     private String localizacao;
+    private TipoUsuario role;
     private String bio;
     private Integer level;
     private Long xp;

@@ -22,7 +22,7 @@ public class ModuloCadastroDTO {
 
     private List<QuestaoDTO> questoes;
 
-    private Long tempoMaximo;
+//    private Long tempoPorQuestao;
 
 
 }

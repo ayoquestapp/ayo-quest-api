@@ -101,7 +101,7 @@ public class ModuloImpl {
                 q.enunciado,
                 q.tipo,
                 q.xp,
-
+                q.tempo_por_questao,
                 json_agg(
                     json_build_object(
                         'id', a.id,
@@ -121,7 +121,8 @@ public class ModuloImpl {
                 q.id,
                 q.enunciado,
                 q.tipo,
-                q.xp
+                q.xp,
+                q.tempo_por_questao
             """;
 
 
@@ -139,7 +140,6 @@ public class ModuloImpl {
                 m.descricao,
                 m.carga_horaria,
                 m.xp_ao_concluir,
-                m.tempo_maximo,
                 t.id as trilhaId,
                 t.nome as nomeTrilha
             FROM tbl_modulos m
@@ -239,7 +239,7 @@ public class ModuloImpl {
             q.enunciado,
             q.tipo,
             q.xp,
-
+            q.tempo_por_questao,
             json_agg(
                 json_build_object(
                     'id', a.id,
@@ -258,7 +258,8 @@ public class ModuloImpl {
             q.id,
             q.enunciado,
             q.tipo,
-            q.xp
+            q.xp,
+            q.tempo_por_questao
 
         ORDER BY q.id
     """;

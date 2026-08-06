@@ -19,8 +19,6 @@ public class ModuloCompletoDTO {
     private String descricao;
     private Long cargaHoraria;
     private Long xpAoConcluir;
-    private Long tempoMaximo;
-
     private Long trilhaId;
     private String nomeTrilha;
 

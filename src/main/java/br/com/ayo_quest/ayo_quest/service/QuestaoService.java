@@ -41,6 +41,7 @@ public class QuestaoService {
             questao.setEnunciado(dto.getEnunciado());
             questao.setTipo(dto.getTipo());
             questao.setXp(dto.getXp());
+            questao.setTempoPorQuestao(dto.getTempoPorQuestao());
 
             questao.setModulo(modulo);
 
@@ -99,6 +100,7 @@ public class QuestaoService {
             questao.setEnunciado(dto.getEnunciado());
             questao.setTipo(dto.getTipo());
             questao.setXp(dto.getXp());
+            questao.setTempoPorQuestao(dto.getTempoPorQuestao());
             questao.setModulo(modulo);
 
             QuestaoEntity salva =
@@ -138,6 +140,7 @@ public class QuestaoService {
         dto.setEnunciado(entity.getEnunciado());
         dto.setTipo(entity.getTipo());
         dto.setXp(entity.getXp());
+        dto.setTempoPorQuestao(entity.getTempoPorQuestao());
 
 
         dto.setAlternativas(
