@@ -23,11 +23,15 @@ public class ModuloEntity {
 
     private Long cargaHoraria;
 
+    private Long notaMinima;
+
+
     @Column(name = "xp_ao_concluir")
     private Long xpAoConcluir;
 
     @Column(name = "trilha_id")
     private Long trilhaId;
 
-    private Long tempoMaximo;
+//    @Column(name = "tempo_por_questao")
+//    private Long tempoPorQuestao;
 }

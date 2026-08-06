@@ -37,6 +37,10 @@ import java.util.List;
                         @ColumnResult(
                                 name = "xp",
                                 type = Integer.class
+                        ),
+                        @ColumnResult(
+                                name = "tempo_por_questao",
+                                type = Long.class
                         )
                 }
         )
@@ -52,19 +56,23 @@ public class QuestaoResolverDTO {
 
     private Integer xp;
 
+    private Long tempoPorQuestao;
+
     @Transient
-    private List<AlternativaResolverDTO> alternativas = new ArrayList<>();
+    private List<AlternativaResolverDTO> alternativas = new ArrayList();
 
 
     public QuestaoResolverDTO(
             Long id,
             String enunciado,
             String tipo,
-            Integer xp
+            Integer xp,
+            Long tempoPorQuestao
     ) {
         this.id = id;
         this.enunciado = enunciado;
         this.tipo = TipoQuestao.valueOf(tipo);
         this.xp = xp;
+        this.tempoPorQuestao = tempoPorQuestao;
     }
 }

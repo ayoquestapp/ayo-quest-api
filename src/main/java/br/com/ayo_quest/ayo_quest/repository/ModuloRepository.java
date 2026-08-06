@@ -21,8 +21,7 @@ public interface ModuloRepository extends JpaRepository<ModuloEntity, Long> {
                     m.trilhaId,
                     null,
                     null,
-                    null,
-                    m.tempoMaximo
+                    null
                 )
                 FROM ModuloEntity m
                 WHERE m.trilhaId = :trilhaId

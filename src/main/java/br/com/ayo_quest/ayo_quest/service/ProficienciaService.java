@@ -32,17 +32,23 @@ public class ProficienciaService {
         proficiencia.setNome(dto.getNome());
         proficiencia.setDescricao(dto.getDescricao());
         proficiencia.setNivel(nivel);
+        proficiencia.setNotaMinima(dto.getNotaMinima());
+
+
 
         ProficienciaEntity proficienciaSalva = proficienciaRepository.save(proficiencia);
 
         List<Long> questoesIds = dto.getQuestoes().stream().map(questaoDTO -> {
+
+            System.out.println("QUESTAO DTO:");
+            System.out.println("TEMPO: " + questaoDTO.getTempoPorQuestao());
+
             QuestaoEntity questao = new QuestaoEntity();
             questao.setEnunciado(questaoDTO.getEnunciado());
             questao.setTipo(questaoDTO.getTipo());
             questao.setXp(questaoDTO.getXp());
+            questao.setTempoPorQuestao(questaoDTO.getTempoPorQuestao());
             questao.setProficiencia(proficienciaSalva);
-            // Aqui, a questão também pode pertencer a um módulo, mas o DTO não informa.
-            // Deixarei nulo por enquanto, assumindo que a associação é apenas com proficiência.
             return questaoRepository.save(questao).getId();
         }).collect(Collectors.toList());
 
@@ -61,6 +67,54 @@ public class ProficienciaService {
         return criarProficienciaDTOResponse(proficiencia, questoesIds);
     }
 
+    public List<ProficienciaDTO> listarTodas() {
+        return proficienciaRepository.findAll().stream()
+                .map(proficiencia -> {
+                    List<Long> questoesIds = questaoRepository.findByProficienciaId(proficiencia.getId())
+                            .stream()
+                            .map(QuestaoEntity::getId)
+                            .collect(Collectors.toList());
+                    return criarProficienciaDTOResponse(proficiencia, questoesIds);
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public ProficienciaDTO atualizar(Long id, CadastrarProficienciaDTO dto) {
+        ProficienciaEntity proficiencia = proficienciaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Proficiência não encontrada"));
+
+        NivelEntity nivel = nivelRepository.findById(dto.getNivelId())
+                .orElseThrow(() -> new RuntimeException("Nível não encontrado"));
+
+        proficiencia.setNome(dto.getNome());
+        proficiencia.setDescricao(dto.getDescricao());
+        proficiencia.setNivel(nivel);
+        proficiencia.setNotaMinima(dto.getNotaMinima());
+
+        // Por simplicidade, não vamos atualizar as questões aqui.
+        // A lógica de atualização de questões pode ser complexa.
+
+        ProficienciaEntity proficienciaAtualizada = proficienciaRepository.save(proficiencia);
+
+        List<Long> questoesIds = questaoRepository.findByProficienciaId(id)
+                .stream()
+                .map(QuestaoEntity::getId)
+                .collect(Collectors.toList());
+
+        return criarProficienciaDTOResponse(proficienciaAtualizada, questoesIds);
+    }
+
+    @Transactional
+    public void deletar(Long id) {
+        ProficienciaEntity proficiencia = proficienciaRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Proficiência não encontrada"));
+        List<QuestaoEntity> questoes = questaoRepository.findByProficienciaId(id);
+        questaoRepository.deleteAll(questoes);
+
+        proficienciaRepository.delete(proficiencia);
+    }
+
     private ProficienciaDTO criarProficienciaDTOResponse(ProficienciaEntity proficiencia, List<Long> questoesIds) {
         ProficienciaDTO dto = new ProficienciaDTO();
         dto.setId(proficiencia.getId());
@@ -69,8 +123,7 @@ public class ProficienciaService {
         dto.setNivelId(proficiencia.getNivel().getId());
         dto.setQuestoesIds(questoesIds);
         dto.setTotalQuestao(questoesIds.size());
-        // notaMinima não está na entidade, então não pode ser mapeado diretamente.
-        // dto.setNotaMinima(...); 
+       
         return dto;
     }
 }

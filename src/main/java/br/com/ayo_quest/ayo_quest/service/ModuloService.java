@@ -47,7 +47,7 @@ public class ModuloService {
         modulo.setDescricao(dto.getDescricao());
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
-        modulo.setTempoMaximo(dto.getTempoMaximo());
+//        modulo.setTempoPorQuestao(dto.getTempoPorQuestao());
 
 
         if (dto.getTrilhaId() != null) {
@@ -95,7 +95,7 @@ public class ModuloService {
         dto.setDescricao(modulo.getDescricao());
         dto.setCargaHoraria(modulo.getCargaHoraria());
         dto.setXpAoConcluir(modulo.getXpAoConcluir());
-        dto.setTempoMaximo(modulo.getTempoMaximo());
+//        dto.setTempoPorQuestao(modulo.getTempoPorQuestao());
         dto.setConteudos(conteudoService.buscarPorModulo(id));
         dto.setQuestoes(questaoService.buscarPorModulo(id));
 
@@ -114,7 +114,7 @@ public class ModuloService {
         modulo.setDescricao(dto.getDescricao());
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
-        modulo.setTempoMaximo(dto.getTempoMaximo());
+//        modulo.setTempoPorQuestao(dto.getTempoPorQuestao());
 
         if (dto.getTrilhaId() != null) {
             modulo.setTrilhaId(dto.getTrilhaId());
@@ -158,12 +158,12 @@ public class ModuloService {
         List<QuestaoResolverDTO> questoes =
                 questaoImpl.buscarQuestoesParaValidacao(id);
 
-        for (QuestaoResolverDTO questao : questoes) {
+        List<Long> ids = questoes.stream()
+                .map(QuestaoResolverDTO::getId)
+                .toList();
 
-            questao.setAlternativas(
-                    alternativaImpl.buscarAlternativasPorQuestao(questao.getId())
-            );
-        }
+        List<AlternativaResolverDTO> alternativas =
+                alternativaImpl.buscarAlternativasPorQuestao(ids);
 
         modulo.setQuestoes(questoes);
 

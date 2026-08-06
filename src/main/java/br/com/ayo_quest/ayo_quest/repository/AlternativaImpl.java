@@ -12,23 +12,22 @@ public class AlternativaImpl {
     @PersistenceContext
     private EntityManager entityManager;
 
-    public List<AlternativaResolverDTO> buscarAlternativasPorQuestao(Long questaoId){
+    public List<AlternativaResolverDTO> buscarAlternativasPorQuestao(List<Long> ids) {
 
         String sql = """
         SELECT
             a.id,
             a.texto,
-            a.correta
-
+            a.correta,
+            a.questao_id
         FROM tbl_alternativa a
-
-        WHERE a.questao_id = :questaoId
+        WHERE a.questao_id IN (:ids)
+        ORDER BY a.questao_id, a.id
     """;
-
 
         return entityManager
                 .createNativeQuery(sql, "AlternativaResolverMapping")
-                .setParameter("questaoId", questaoId)
+                .setParameter("ids", ids)
                 .getResultList();
     }
 }

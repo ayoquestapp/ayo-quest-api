@@ -4,56 +4,79 @@ import br.com.ayo_quest.ayo_quest.dto.DadosProfileDTO;
 import br.com.ayo_quest.ayo_quest.models.ProfileEntity;
 import br.com.ayo_quest.ayo_quest.service.ProfileService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+
 @RestController
 @RequestMapping("/api/profiles")
 @RequiredArgsConstructor
 public class ProfileController {
 
-    @Autowired
+
     private final ProfileService service;
+
+
 
     @GetMapping("/tutors")
     public ResponseEntity<List<ProfileEntity>> getTutors() {
-        return ResponseEntity.ok(service.getTutors());
+
+        return ResponseEntity.ok(
+                service.getTutors()
+        );
+
     }
+
+
 
     @GetMapping("/me")
-    public ResponseEntity<?> getMyProfile(Authentication authentication) {
+    public ResponseEntity<DadosProfileDTO> getMyProfile(
+            Authentication authentication
+    ) {
 
-        System.out.println("=== AUTH DEBUG ===");
-        System.out.println("AUTH CLASS: " + authentication.getClass());
-        System.out.println("AUTH NAME: " + authentication.getName());
-        System.out.println("PRINCIPAL: " + authentication.getPrincipal());
-        System.out.println("==================");
 
-        return ResponseEntity.ok(Map.of(
-                "authName", authentication.getName(),
-                "principalClass", authentication.getPrincipal().getClass().getName()
-        ));
+        return ResponseEntity.ok(
+                service.getDados(authentication)
+        );
+
     }
+
+
 
     @GetMapping("/dados-profile")
     public ResponseEntity<DadosProfileDTO> getDadosProfile(
-            @AuthenticationPrincipal Jwt jwt) {
+            Authentication authentication
+    ) {
 
-        return ResponseEntity.ok(service.getDados(jwt));
+
+        return ResponseEntity.ok(
+                service.getDados(authentication)
+        );
+
     }
+
+
 
     @PutMapping("/dados-profile/alterar")
-    public ResponseEntity<DadosProfileDTO> updateDadosProfile(@AuthenticationPrincipal Jwt jwt,@RequestBody DadosProfileDTO dto) {
+    public ResponseEntity<DadosProfileDTO> updateDadosProfile(
+            Authentication authentication,
+            @RequestBody DadosProfileDTO dto
+    ) {
 
-        return ResponseEntity.ok(service.alterarDados(jwt,dto));
+
+        return ResponseEntity.ok(
+                service.alterarDados(
+                        authentication,
+                        dto
+                )
+        );
+
     }
+
 }

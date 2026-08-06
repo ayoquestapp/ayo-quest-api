@@ -1,6 +1,7 @@
 package br.com.ayo_quest.ayo_quest.repository;
 
 import br.com.ayo_quest.ayo_quest.dto.QuestaoDTO;
+import br.com.ayo_quest.ayo_quest.dto.resolver.AlternativaResolverDTO;
 import br.com.ayo_quest.ayo_quest.dto.resolver.QuestaoResolverDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -24,8 +25,8 @@ public class QuestaoImpl {
                         q.id,
                         q.enunciado,
                         q.tipo,
-                        q.xp
-                
+                        q.xp,
+                        q.tempo_por_questao
                     FROM tbl_questao q
                 
                     WHERE q.modulo_id = :moduloId
@@ -44,7 +45,8 @@ public class QuestaoImpl {
             q.id,
             q.enunciado,
             q.tipo,
-            q.xp
+            q.xp,
+            q.tempo_por_questao
         FROM tbl_questao q
         WHERE q.modulo_id = :moduloId
         ORDER BY q.id
@@ -55,12 +57,12 @@ public class QuestaoImpl {
                         .setParameter("moduloId", moduloId)
                         .getResultList();
 
-        for (QuestaoResolverDTO questao : questoes) {
+        List<Long> ids = questoes.stream()
+                .map(QuestaoResolverDTO::getId)
+                .toList();
 
-            questao.setAlternativas(
-                    alternativaImpl.buscarAlternativasPorQuestao(questao.getId())
-            );
-        }
+        List<AlternativaResolverDTO> alternativas =
+                alternativaImpl.buscarAlternativasPorQuestao(ids);
 
         return questoes;
     }
