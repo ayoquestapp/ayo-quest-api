@@ -9,7 +9,7 @@ import lombok.Data;
 public class TentativaDTO {
 
     private Long id;
-
     private StatusTentativa status;
+
 
 }

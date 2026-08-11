@@ -13,6 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,15 +24,12 @@ public class ModuloService {
 
     private final ModuloRepository moduloRepository;
     private final ModuloImpl moduloImpl;
-    private final QuestaoRepository questaoRepository;
-    private final ConteudoRepository conteudoRepository;
-    private final AlternativaRepository alternativaRepository;
-    private final TrilhaRepository trilhaRepository;
     private final QuestaoImpl questaoImpl;
     private final ConteudoImpl conteudoImpl;
     private final AlternativaImpl alternativaImpl;
     private final ConteudoService conteudoService;
     private final QuestaoService questaoService;
+    private final TentativaModuloService tentativaService;
 
 
     public List<ModuloDTO> listar() {
@@ -47,6 +46,7 @@ public class ModuloService {
         modulo.setDescricao(dto.getDescricao());
         modulo.setCargaHoraria(dto.getCargaHoraria());
         modulo.setXpAoConcluir(dto.getXpAoConcluir());
+        modulo.setNotaMinima(dto.getNotaMinima());
 //        modulo.setTempoPorQuestao(dto.getTempoPorQuestao());
 
 
@@ -151,30 +151,160 @@ public class ModuloService {
 
     public ModuloResolverDTO buscarModuloResolver(Long id) {
 
-        ModuloResolverDTO modulo = moduloImpl.buscarModuloResolver(id);
+        ModuloResolverDTO modulo =
+                moduloImpl.buscarModuloResolver(id);
 
-        modulo.setConteudos(conteudoImpl.buscarConteudosPorModulo(id));
+        modulo.setConteudos(
+                conteudoImpl.buscarConteudosPorModulo(id)
+        );
+
 
         List<QuestaoResolverDTO> questoes =
                 questaoImpl.buscarQuestoesParaValidacao(id);
 
-        List<Long> ids = questoes.stream()
-                .map(QuestaoResolverDTO::getId)
-                .toList();
+
+        List<Long> ids =
+                questoes.stream()
+                        .map(QuestaoResolverDTO::getId)
+                        .toList();
+
 
         List<AlternativaResolverDTO> alternativas =
                 alternativaImpl.buscarAlternativasPorQuestao(ids);
 
+
+        questoes.forEach(questao -> {
+
+            List<AlternativaResolverDTO> alternativasDaQuestao =
+                    alternativas.stream()
+                            .filter(alternativa ->
+                                    alternativa.getQuestaoId()
+                                            .equals(questao.getId())
+                            )
+                            .toList();
+
+
+            questao.setAlternativas(
+                    alternativasDaQuestao
+            );
+
+        });
+
+
         modulo.setQuestoes(questoes);
+
 
         return modulo;
     }
 
+    @Transactional
     public ResultadoModuloDTO conferirRespostas(
             Long id,
-            Map<String, Object> respostas) {
+            Map<String,Object> respostas
+    ) {
 
-        return moduloImpl.conferirRespostas(id, respostas);
+
+        List<QuestaoDTO> questoes =
+                questaoImpl.buscarQuestoesPorModulo(id);
+
+
+        int acertos = 0;
+        int total = questoes.size();
+
+        int xp = 0;
+
+
+        for (QuestaoDTO questao : questoes) {
+
+
+            Object resposta =
+                    respostas.get(
+                            questao.getId().toString()
+                    );
+
+
+            boolean acertou = false;
+
+
+            switch (questao.getTipo()) {
+
+
+                case VERDADEIRO_FALSO:
+                case MULTIPLA_ESCOLHA:
+
+
+                    Long alternativaSelecionada =
+                            Long.valueOf(
+                                    resposta.toString()
+                            );
+
+
+                    acertou =
+                            questao.getAlternativas()
+                                    .stream()
+                                    .anyMatch(alt ->
+                                            alt.getId()
+                                                    .equals(alternativaSelecionada)
+                                                    &&
+                                                    alt.isCorreta()
+                                    );
+
+
+                    break;
+
+
+
+                case CAIXAS_SELECAO:
+
+
+                    Map<String,Object> selecionadas =
+                            (Map<String,Object>) resposta;
+
+
+                    Set<Long> escolhidas =
+                            selecionadas.entrySet()
+                                    .stream()
+                                    .filter(e -> Boolean.TRUE.equals(e.getValue()))
+                                    .map(e -> Long.valueOf(e.getKey()))
+                                    .collect(Collectors.toSet());
+
+
+                    Set<Long> corretas =
+                            questao.getAlternativas()
+                                    .stream()
+                                    .filter(AlternativaDTO::isCorreta)
+                                    .map(AlternativaDTO::getId)
+                                    .collect(Collectors.toSet());
+
+
+                    acertou =
+                            escolhidas.equals(corretas);
+
+
+                    break;
+            }
+
+
+
+            if(acertou){
+                acertos++;
+                xp += questao.getXp();
+            }
+
+        }
+
+
+        double nota =
+                ((double) acertos / total) * 100;
+
+
+        return ResultadoModuloDTO.builder()
+                .totalQuestoes((long) total)
+                .acertos(acertos)
+                .erros(total-acertos)
+                .nota(nota)
+                .xpGanho(xp)
+                .build();
     }
 
     public List<ModuloDTO> buscarPorTrilha(Long id) {

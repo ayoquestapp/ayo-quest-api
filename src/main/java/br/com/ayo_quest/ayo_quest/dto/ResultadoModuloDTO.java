@@ -11,10 +11,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class ResultadoModuloDTO {
+
     private int acertos;
     private int erros;
     private int xpGanho;
     private double nota;
     private boolean aprovado;
     private Long totalQuestoes;
+    private int xpAtual;
+    private int xpProximoLevel;
+    private int levelAtual;
+    private boolean subiuLevel;
+    private int coinsGanho;
+
 }

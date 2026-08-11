@@ -16,6 +16,8 @@ public class ModuloCadastroDTO {
 
     private Long xpAoConcluir;
 
+    private Long notaMinima;
+
     private Long trilhaId;
 
     private List<ConteudoDTO> conteudos;

@@ -17,7 +17,8 @@ import lombok.NoArgsConstructor;
 
                         @ColumnResult(name = "id", type = Long.class),
                         @ColumnResult(name = "texto", type = String.class),
-                        @ColumnResult(name = "correta", type = Boolean.class)
+                        @ColumnResult(name = "correta", type = Boolean.class),
+                        @ColumnResult(name = "questao_id", type = Long.class)
 
                 }
         )
@@ -31,6 +32,8 @@ public class AlternativaResolverDTO {
     private String texto;
 
     private boolean correta;
+
+    private Long questaoId;
 
 
 }

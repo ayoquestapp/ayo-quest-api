@@ -15,7 +15,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/tentativas")
 @RequiredArgsConstructor
-@CrossOrigin("*")
 public class TentativaModuloController {
 
 
@@ -24,24 +23,20 @@ public class TentativaModuloController {
 
     @PostMapping("/iniciar")
     public ResponseEntity<TentativaDTO> iniciar(
-            @RequestBody IniciarTentativaDTO dto
+            @RequestBody IniciarTentativaDTO dto,
+            Authentication authentication
     ) {
 
 
-        Authentication authentication =
-                SecurityContextHolder
-                        .getContext()
-                        .getAuthentication();
-
-
         UUID profileId =
-                UUID.fromString(authentication.getName());
+                UUID.fromString(
+                        authentication.getName()
+                );
 
 
         return ResponseEntity.ok(
                 service.iniciar(dto, profileId)
         );
-
     }
 
 }

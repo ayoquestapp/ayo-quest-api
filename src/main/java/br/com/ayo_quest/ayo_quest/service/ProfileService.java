@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -45,26 +46,30 @@ public class ProfileService {
 
     public DadosProfileDTO getDados(
             Authentication authentication
-    ) {
+    ){
 
-
-        String email =
-                authentication.getName();
-
+        UUID usuarioId =
+                UUID.fromString(
+                        authentication.getName()
+                );
 
 
         ProfileEntity profile =
-                repository.findByEmail(email)
 
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Profile não encontrado"
-                                )
+                repository
+                        .findByUsuarioId(usuarioId)
+
+                        .orElseThrow(
+                                () ->
+                                        new RuntimeException(
+                                                "Profile não encontrado"
+                                        )
                         );
 
 
-
-        return converter(profile);
+        return new DadosProfileDTO(
+                profile
+        );
 
     }
 

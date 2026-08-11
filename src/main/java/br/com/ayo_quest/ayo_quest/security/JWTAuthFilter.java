@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -21,78 +22,143 @@ public class JWTAuthFilter extends OncePerRequestFilter {
     private final JWTService jwtService;
 
 
+
     @Override
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain
+
     ) throws ServletException, IOException {
 
 
-        String path = request.getServletPath();
+
+        String path =
+                request.getServletPath();
 
 
-        if (
-                path.startsWith("/auth") ||
-                        path.startsWith("/api/auth") ||
-                        path.startsWith("/api/storage")
-        ) {
-            filterChain.doFilter(request, response);
+
+        if(
+                path.startsWith("/auth")
+                        ||
+                        path.startsWith("/api/auth")
+        ){
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
         }
 
 
-        String authHeader = request.getHeader("Authorization");
+
+        String header =
+                request.getHeader(
+                        "Authorization"
+                );
 
 
-        if(authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request,response);
+
+        if(
+                header == null
+                        ||
+                        !header.startsWith("Bearer ")
+        ){
+
+            filterChain.doFilter(
+                    request,
+                    response
+            );
+
             return;
+
         }
 
 
-        String token = authHeader.substring(7);
+
+        String token =
+                header.substring(7);
+
 
 
         try {
 
-            String email = jwtService.getEmail(token);
 
-            String role = jwtService.getRole(token);
-
-            System.out.println("EMAIL JWT: " + email);
-            System.out.println("ROLE JWT: " + role);
+            UUID userId =
+                    jwtService.getUserId(token);
 
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(
-                            email,
-                            null,
-                            List.of(
-                                    new SimpleGrantedAuthority(
-                                            "ROLE_" + role
-                                    )
-                            )
-                    );
+
+            String role =
+                    jwtService.getRole(token);
+
 
 
             System.out.println(
-                    "AUTHORITIES: " + authentication.getAuthorities()
+                    "USER UUID JWT: "
+                            + userId
             );
 
 
+            System.out.println(
+                    "ROLE JWT: "
+                            + role
+            );
+
+
+
+            UsernamePasswordAuthenticationToken authentication =
+
+
+                    new UsernamePasswordAuthenticationToken(
+
+                            userId.toString(),
+
+                            null,
+
+
+                            List.of(
+
+                                    new SimpleGrantedAuthority(
+
+                                            "ROLE_" + role
+
+                                    )
+
+                            )
+
+                    );
+
+
+
+
             SecurityContextHolder
+
                     .getContext()
+
                     .setAuthentication(authentication);
 
 
-        } catch(Exception e){
-            e.printStackTrace();
-            SecurityContextHolder.clearContext();
+
+        }catch(Exception e){
+
+
+            SecurityContextHolder
+
+                    .clearContext();
+
         }
 
 
-        filterChain.doFilter(request,response);
+
+        filterChain.doFilter(
+                request,
+                response
+        );
+
     }
+
 
 }
