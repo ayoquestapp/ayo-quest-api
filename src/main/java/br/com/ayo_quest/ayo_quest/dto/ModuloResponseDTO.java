@@ -21,6 +21,10 @@ public class ModuloResponseDTO {
 
     private Long notaMinima;
 
+    private Long nivelId;
+
+    private Long trilhaId;
+
     private List<ConteudoDTO> conteudos;
 
     private List<QuestaoDTO> questoes;

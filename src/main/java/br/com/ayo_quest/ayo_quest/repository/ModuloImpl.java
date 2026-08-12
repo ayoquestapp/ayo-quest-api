@@ -40,14 +40,19 @@ public class ModuloImpl {
             m.id,
             m.nome,
             m.descricao,
+            m.nota_minima,
             m.carga_horaria,
             m.xp_ao_concluir,
             m.tempo_maximo,
             m.trilha_id,
-            t.nome AS nome_trilha
+            m.nivel_id,
+            t.nome AS nome_trilha,
+            n.nome_nivel AS nome_nivel
         FROM tbl_modulos m
         LEFT JOIN tbl_trilhas t
             ON t.id = m.trilha_id
+        LEFT JOIN tbl_nivel n
+            ON n.id = m.nivel_id
         """;
 
         List<ModuloDTO> modulos = entityManager
@@ -141,7 +146,7 @@ public class ModuloImpl {
                 m.carga_horaria,
                 m.xp_ao_concluir,
                 t.id as trilhaId,
-                t.nome as nomeTrilha
+                t.nome as nome_trilha
             FROM tbl_modulos m
             LEFT JOIN tbl_trilhas t
                 ON t.id = m.trilha_id

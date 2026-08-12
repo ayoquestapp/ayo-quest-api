@@ -9,6 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +22,7 @@ public class QuestaoService {
     private final AlternativaService alternativaService;
 
 
-    public List<QuestaoDTO> buscarPorModulo(Long moduloId){
+    public List<QuestaoDTO> buscarPorModulo(Long moduloId) {
 
         return questaoRepository.findByModuloId(moduloId)
                 .stream()
@@ -26,94 +30,134 @@ public class QuestaoService {
                 .toList();
     }
 
+
+    @Transactional
     public void salvarLista(
             ModuloEntity modulo,
             List<QuestaoDTO> questoes
-    ){
+    ) {
 
+        if (questoes == null || questoes.isEmpty()) {
+            return;
+        }
 
-        questoes.forEach(dto -> {
+        List<QuestaoEntity> entidades = questoes.stream()
+                .map(dto -> {
 
+                    QuestaoEntity questao = new QuestaoEntity();
 
-            QuestaoEntity questao = new QuestaoEntity();
+                    questao.setEnunciado(dto.getEnunciado());
+                    questao.setTipo(dto.getTipo());
+                    questao.setXp(dto.getXp());
+                    questao.setTempoPorQuestao(dto.getTempoPorQuestao());
+                    questao.setModulo(modulo);
 
+                    return questao;
 
-            questao.setEnunciado(dto.getEnunciado());
-            questao.setTipo(dto.getTipo());
-            questao.setXp(dto.getXp());
-            questao.setTempoPorQuestao(dto.getTempoPorQuestao());
+                })
+                .toList();
+        List<QuestaoEntity> salvas =
+                questaoRepository.saveAll(entidades);
 
-            questao.setModulo(modulo);
+        for (int i = 0; i < salvas.size(); i++) {
 
+            QuestaoEntity questao = salvas.get(i);
 
+            QuestaoDTO dto = questoes.get(i);
 
-            QuestaoEntity salva =
-                    questaoRepository.save(questao);
-
-
-
-            if(dto.getAlternativas() != null){
-
-                alternativaService.salvarLista(
-                        salva,
-                        dto.getAlternativas()
-                );
-
-            }
-
-        });
-
+            alternativaService.salvarLista(
+                    questao,
+                    dto.getAlternativas()
+            );
+        }
     }
+
+
     @Transactional
     public void atualizarLista(
             ModuloEntity modulo,
             List<QuestaoDTO> questoesDTO
     ) {
 
+        if (questoesDTO == null) {
+            questoesDTO = List.of();
+        }
+
         List<QuestaoEntity> existentes =
                 questaoRepository.findByModuloId(modulo.getId());
 
-        existentes.forEach(questao -> {
+        Map<Long, QuestaoEntity> existentesMap =
+                existentes.stream()
+                        .filter(q -> q.getId() != null)
+                        .collect(Collectors.toMap(
+                                QuestaoEntity::getId,
+                                Function.identity()
+                        ));
 
-            boolean existe = questoesDTO.stream()
-                    .anyMatch(dto ->
-                            dto.getId() != null &&
-                                    dto.getId().equals(questao.getId()));
+        Set<Long> idsRecebidos =
+                questoesDTO.stream()
+                        .map(QuestaoDTO::getId)
+                        .filter(id -> id != null)
+                        .collect(Collectors.toSet());
 
-            if (!existe) {
 
-                alternativaService.deletarPorQuestao(questao.getId());
+        List<Long> idsRemover =
+                existentes.stream()
+                        .map(QuestaoEntity::getId)
+                        .filter(id -> !idsRecebidos.contains(id))
+                        .toList();
 
-                questaoRepository.delete(questao);
+        if (!idsRemover.isEmpty()) {
 
-            }
+            alternativaService.deletarPorQuestoes(idsRemover);
 
-        });
+            questaoRepository.deleteByIdIn(idsRemover);
+        }
 
         questoesDTO.forEach(dto -> {
 
-            QuestaoEntity questao =
-                    dto.getId() != null
-                            ? questaoRepository.findById(dto.getId()).orElse(new QuestaoEntity())
-                            : new QuestaoEntity();
+            QuestaoEntity questao;
+
+            if (dto.getId() != null && existentesMap.containsKey(dto.getId())) {
+                /*
+                 * EXISTENTE:
+                 * reaproveita a entidade carregada.
+                 */
+                questao = existentesMap.get(dto.getId());
+
+            } else {
+                /*
+                 * NOVA:
+                 * cria somente se realmente for nova.
+                 */
+                questao = new QuestaoEntity();
+                questao.setModulo(modulo);
+            }
 
             questao.setEnunciado(dto.getEnunciado());
             questao.setTipo(dto.getTipo());
             questao.setXp(dto.getXp());
             questao.setTempoPorQuestao(dto.getTempoPorQuestao());
-            questao.setModulo(modulo);
 
-            QuestaoEntity salva =
-                    questaoRepository.save(questao);
+            /*
+             * Salva a questão (INSERT ou UPDATE) para garantir que temos um ID
+             * para passar para o serviço de alternativas.
+             */
+            QuestaoEntity questaoSalva = questaoRepository.save(questao);
 
-            alternativaService.atualizarLista(
-                    salva,
-                    dto.getAlternativas()
-            );
-
+            /*
+             * Agora, com a questão salva e seu ID garantido, atualizamos a lista
+             * de alternativas correspondente a ela.
+             */
+            if (dto.getAlternativas() != null) {
+                alternativaService.atualizarLista(
+                        questaoSalva,
+                        dto.getAlternativas()
+                );
+            }
         });
-
     }
+
 
     @Transactional
     public void deletarPorModulo(Long moduloId) {
@@ -121,18 +165,22 @@ public class QuestaoService {
         List<QuestaoEntity> questoes =
                 questaoRepository.findByModuloId(moduloId);
 
-        questoes.forEach(q -> {
+        if (questoes.isEmpty()) {
+            return;
+        }
 
-            alternativaService.deletarPorQuestao(q.getId());
+        List<Long> ids =
+                questoes.stream()
+                        .map(QuestaoEntity::getId)
+                        .toList();
 
-            questaoRepository.delete(q);
+        alternativaService.deletarPorQuestoes(ids);
 
-        });
-
+        questaoRepository.deleteAllInBatch(questoes);
     }
 
 
-    private QuestaoDTO converter(QuestaoEntity entity){
+    private QuestaoDTO converter(QuestaoEntity entity) {
 
         QuestaoDTO dto = new QuestaoDTO();
 
@@ -140,13 +188,15 @@ public class QuestaoService {
         dto.setEnunciado(entity.getEnunciado());
         dto.setTipo(entity.getTipo());
         dto.setXp(entity.getXp());
-        dto.setTempoPorQuestao(entity.getTempoPorQuestao());
-
-
-        dto.setAlternativas(
-                alternativaService.buscarPorQuestao(entity.getId())
+        dto.setTempoPorQuestao(
+                entity.getTempoPorQuestao()
         );
 
+        dto.setAlternativas(
+                alternativaService.buscarPorQuestao(
+                        entity.getId()
+                )
+        );
 
         return dto;
     }

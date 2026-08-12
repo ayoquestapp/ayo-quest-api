@@ -85,21 +85,28 @@ public class AuthService {
         );
     }
 
-    public LoginResponseDTO login(LoginRequestDTO dto){
+    public LoginResponseDTO login(LoginRequestDTO dto) {
+
+        String email = dto.getEmail()
+                .trim()
+                .toLowerCase();
 
         UsuarioEntity usuario = usuarioRepository
-                .findByEmail(dto.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException(
+                                "Usuário não encontrado"
+                        )
+                );
 
-        System.out.println("Email recebido: '" + dto.getEmail() + "'");
-        System.out.println("Senha recebida: '" + dto.getSenha() + "'");
-        System.out.println("Hash salvo: " + usuario.getSenha());
+        boolean matches = passwordEncoder.matches(
+                dto.getSenha(),
+                usuario.getSenha()
+        );
 
-        boolean matches = passwordEncoder.matches(dto.getSenha(), usuario.getSenha());
+        System.out.println("SENHA CORRETA: " + matches);
 
-        System.out.println("Matches = " + matches);
-
-        if(!matches){
+        if (!matches) {
             throw new RuntimeException("Senha inválida");
         }
 
@@ -113,5 +120,4 @@ public class AuthService {
                 usuario.getRole().name()
         );
     }
-
 }

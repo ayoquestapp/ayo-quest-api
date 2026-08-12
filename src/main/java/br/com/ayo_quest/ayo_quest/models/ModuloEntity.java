@@ -25,12 +25,14 @@ public class ModuloEntity {
 
     private Long notaMinima;
 
-
     @Column(name = "xp_ao_concluir")
     private Long xpAoConcluir;
 
     @Column(name = "trilha_id")
     private Long trilhaId;
+
+    @Column(name = "nivel_id" , nullable = false)
+    private Long nivelId;
 
 //    @Column(name = "tempo_por_questao")
 //    private Long tempoPorQuestao;

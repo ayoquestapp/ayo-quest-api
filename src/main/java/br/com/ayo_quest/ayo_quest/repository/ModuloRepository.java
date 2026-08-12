@@ -16,9 +16,12 @@ public interface ModuloRepository extends JpaRepository<ModuloEntity, Long> {
                     m.id,
                     m.nome,
                     m.descricao,
+                    m.notaMinima,
                     m.cargaHoraria,
                     m.xpAoConcluir,
                     m.trilhaId,
+                    m.nivelId,
+                    null,
                     null,
                     null,
                     null

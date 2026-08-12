@@ -2,6 +2,7 @@ package br.com.ayo_quest.ayo_quest.controller;
 
 import br.com.ayo_quest.ayo_quest.dto.auth.CadastroUsuarioDTO;
 import br.com.ayo_quest.ayo_quest.dto.auth.LoginRequestDTO;
+import br.com.ayo_quest.ayo_quest.dto.auth.LoginResponseDTO;
 import br.com.ayo_quest.ayo_quest.models.UsuarioEntity;
 import br.com.ayo_quest.ayo_quest.repository.UsuarioRepository;
 import br.com.ayo_quest.ayo_quest.service.AuthService;
@@ -67,14 +68,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody LoginRequestDTO dto
-    ){
+    public LoginResponseDTO login(@RequestBody LoginRequestDTO dto) {
 
-        return ResponseEntity.ok(
-                authService.login(dto)
-        );
+        System.out.println("🔥🔥🔥 ENTROU NO CONTROLLER LOGIN");
+        System.out.println("EMAIL: [" + dto.getEmail() + "]");
 
+        return authService.login(dto);
     }
 
 }

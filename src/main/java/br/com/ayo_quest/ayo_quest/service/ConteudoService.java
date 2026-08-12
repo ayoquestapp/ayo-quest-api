@@ -9,6 +9,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -54,38 +58,65 @@ public class ConteudoService {
             List<ConteudoDTO> conteudosDTO
     ) {
 
+        if (conteudosDTO == null) {
+            conteudosDTO = List.of();
+        }
+
         List<ConteudoEntity> existentes =
                 conteudoRepository.findByModuloId(modulo.getId());
 
-        existentes.forEach(conteudo -> {
+        Map<Long, ConteudoEntity> existentesMap =
+                existentes.stream()
+                        .filter(c -> c.getId() != null)
+                        .collect(Collectors.toMap(
+                                ConteudoEntity::getId,
+                                Function.identity()
+                        ));
 
-            boolean existe = conteudosDTO.stream()
-                    .anyMatch(dto ->
-                            dto.getId() != null &&
-                                    dto.getId().equals(conteudo.getId()));
+        Set<Long> idsRecebidos =
+                conteudosDTO.stream()
+                        .map(ConteudoDTO::getId)
+                        .filter(id -> id != null)
+                        .collect(Collectors.toSet());
 
-            if (!existe) {
-                conteudoRepository.delete(conteudo);
-            }
+        List<Long> idsRemover =
+                existentes.stream()
+                        .map(ConteudoEntity::getId)
+                        .filter(id -> !idsRecebidos.contains(id))
+                        .toList();
 
-        });
+        if (!idsRemover.isEmpty()) {
+            conteudoRepository.deleteByIdIn(idsRemover);
+        }
 
-        conteudosDTO.forEach(dto -> {
+        List<ConteudoEntity> salvar =
+                conteudosDTO.stream()
+                        .map(dto -> {
 
-            ConteudoEntity conteudo =
-                    dto.getId() != null
-                            ? conteudoRepository.findById(dto.getId()).orElse(new ConteudoEntity())
-                            : new ConteudoEntity();
+                            ConteudoEntity conteudo;
 
-            conteudo.setTitulo(dto.getTitulo());
-            conteudo.setTipo(dto.getTipo());
-            conteudo.setValor(dto.getValor());
-            conteudo.setModulo(modulo);
+                            if (dto.getId() != null &&
+                                    existentesMap.containsKey(dto.getId())) {
 
-            conteudoRepository.save(conteudo);
+                                conteudo =
+                                        existentesMap.get(dto.getId());
 
-        });
+                            } else {
 
+                                conteudo = new ConteudoEntity();
+                                conteudo.setModulo(modulo);
+                            }
+
+                            conteudo.setTitulo(dto.getTitulo());
+                            conteudo.setTipo(dto.getTipo());
+                            conteudo.setValor(dto.getValor());
+
+                            return conteudo;
+
+                        })
+                        .toList();
+
+        conteudoRepository.saveAll(salvar);
     }
 
     @Transactional

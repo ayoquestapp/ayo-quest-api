@@ -1,6 +1,4 @@
 package br.com.ayo_quest.ayo_quest.dto;
-
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

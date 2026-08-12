@@ -14,45 +14,43 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AlternativaService {
 
-
     private final AlternativaRepository alternativaRepository;
 
 
-    public List<AlternativaDTO> buscarPorQuestao(Long questaoId){
+    public List<AlternativaDTO> buscarPorQuestao(Long questaoId) {
 
         return alternativaRepository.findByQuestaoId(questaoId)
                 .stream()
                 .map(this::converter)
                 .toList();
-
     }
+
 
     public void salvarLista(
             QuestaoEntity questao,
             List<AlternativaDTO> alternativas
-    ){
+    ) {
 
+        if (alternativas == null || alternativas.isEmpty()) {
+            return;
+        }
 
-        alternativas.forEach(dto -> {
+        List<AlternativaEntity> entidades = alternativas.stream()
+                .map(dto -> {
 
+                    AlternativaEntity alternativa = new AlternativaEntity();
 
-            AlternativaEntity alternativa =
-                    new AlternativaEntity();
+                    alternativa.setTexto(dto.getTexto());
+                    alternativa.setCorreta(dto.isCorreta());
+                    alternativa.setQuestao(questao);
 
+                    return alternativa;
+                })
+                .toList();
 
-            alternativa.setTexto(dto.getTexto());
-
-            alternativa.setCorreta(dto.isCorreta());
-
-            alternativa.setQuestao(questao);
-
-
-
-            alternativaRepository.save(alternativa);
-
-        });
-
+        alternativaRepository.saveAll(entidades);
     }
+
 
     @Transactional
     public void atualizarLista(
@@ -60,48 +58,87 @@ public class AlternativaService {
             List<AlternativaDTO> alternativasDTO
     ) {
 
+        if (alternativasDTO == null) {
+            alternativasDTO = List.of();
+        }
+
         List<AlternativaEntity> existentes =
                 alternativaRepository.findByQuestaoId(questao.getId());
 
-        existentes.forEach(alternativa -> {
+        if (alternativasDTO.isEmpty()) {
 
-            boolean existe = alternativasDTO.stream()
-                    .anyMatch(dto ->
-                            dto.getId() != null &&
-                                    dto.getId().equals(alternativa.getId()));
-
-            if (!existe) {
-                alternativaRepository.delete(alternativa);
+            if (!existentes.isEmpty()) {
+                alternativaRepository.deleteAllInBatch(existentes);
             }
 
-        });
+            return;
+        }
 
-        alternativasDTO.forEach(dto -> {
+        var idsRecebidos = alternativasDTO.stream()
+                .map(AlternativaDTO::getId)
+                .filter(id -> id != null)
+                .collect(java.util.stream.Collectors.toSet());
 
-            AlternativaEntity alternativa =
-                    dto.getId() != null
-                            ? alternativaRepository.findById(dto.getId()).orElse(new AlternativaEntity())
-                            : new AlternativaEntity();
 
-            alternativa.setTexto(dto.getTexto());
-            alternativa.setCorreta(dto.isCorreta());
-            alternativa.setQuestao(questao);
+        List<AlternativaEntity> remover =
+                existentes.stream()
+                        .filter(alternativa ->
+                                !idsRecebidos.contains(alternativa.getId()))
+                        .toList();
 
-            alternativaRepository.save(alternativa);
 
-        });
+        if (!remover.isEmpty()) {
+            alternativaRepository.deleteAllInBatch(remover);
+        }
 
+        var existentesMap = existentes.stream()
+                .collect(
+                        java.util.stream.Collectors.toMap(
+                                AlternativaEntity::getId,
+                                alternativa -> alternativa
+                        )
+                );
+
+        List<AlternativaEntity> salvar = alternativasDTO.stream()
+                .map(dto -> {
+
+                    AlternativaEntity alternativa;
+
+                    if (dto.getId() != null &&
+                            existentesMap.containsKey(dto.getId())) {
+
+                        alternativa = existentesMap.get(dto.getId());
+
+                    } else {
+
+                        alternativa = new AlternativaEntity();
+                        alternativa.setQuestao(questao);
+                    }
+
+                    alternativa.setTexto(dto.getTexto());
+                    alternativa.setCorreta(dto.isCorreta());
+
+                    return alternativa;
+
+                })
+                .toList();
+
+
+        /*
+         * UMA operação para salvar tudo.
+         */
+        alternativaRepository.saveAll(salvar);
     }
+
 
     @Transactional
     public void deletarPorQuestao(Long questaoId) {
 
         alternativaRepository.deleteByQuestaoId(questaoId);
-
     }
 
 
-    private AlternativaDTO converter(AlternativaEntity entity){
+    private AlternativaDTO converter(AlternativaEntity entity) {
 
         AlternativaDTO dto = new AlternativaDTO();
 
@@ -110,5 +147,15 @@ public class AlternativaService {
         dto.setCorreta(entity.isCorreta());
 
         return dto;
+    }
+
+    @Transactional
+    public void deletarPorQuestoes(List<Long> questaoIds) {
+
+        if (questaoIds == null || questaoIds.isEmpty()) {
+            return;
+        }
+
+        alternativaRepository.deleteByQuestaoIdIn(questaoIds);
     }
 }

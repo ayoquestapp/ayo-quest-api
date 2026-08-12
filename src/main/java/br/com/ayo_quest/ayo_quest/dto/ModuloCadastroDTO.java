@@ -1,11 +1,13 @@
 package br.com.ayo_quest.ayo_quest.dto;
 
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 
 import java.util.List;
 
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class ModuloCadastroDTO {
 
     private String nome;
@@ -19,6 +21,8 @@ public class ModuloCadastroDTO {
     private Long notaMinima;
 
     private Long trilhaId;
+
+    private Long nivelId;
 
     private List<ConteudoDTO> conteudos;
 

@@ -26,9 +26,11 @@ public class TentativaModuloEntity {
 
     private LocalDateTime fim;
 
-    private Integer nota;
+    private double nota;
 
     private Integer xpGanho;
+
+    private boolean aprovado;
 
     @Enumerated(EnumType.STRING)
     private StatusTentativa status;

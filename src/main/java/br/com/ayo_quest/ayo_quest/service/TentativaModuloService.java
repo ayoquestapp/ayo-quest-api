@@ -100,45 +100,7 @@ public class TentativaModuloService {
 
     }
 
-    @Transactional
-    public void concluirTentativa(
-            Long tentativaId,
-            UUID profileId
-    ){
-
-        TentativaModuloEntity tentativa =
-                tentativaRepository.findById(tentativaId)
-                        .orElseThrow(() ->
-                                new RuntimeException(
-                                        "Tentativa não encontrada"
-                                )
-                        );
-
-
-        if(!tentativa.getProfile()
-                .getId()
-                .equals(profileId)){
-
-            throw new RuntimeException(
-                    "Tentativa inválida"
-            );
-
-        }
-
-
-        tentativa.setStatus(
-                StatusTentativa.FINALIZADA
-        );
-
-
-        tentativa.setFim(
-                LocalDateTime.now()
-        );
-
-
-        tentativaRepository.save(tentativa);
-
-    }@Transactional
+   @Transactional
     public void concluirTentativa(
             Long tentativaId,
             UUID profileId,
@@ -178,7 +140,11 @@ public class TentativaModuloService {
         );
 
         tentativa.setNota(
-                (int) Math.round(resultado.getNota())
+                resultado.getNota()
+        );
+
+        tentativa.setAprovado(
+                resultado.isAprovado()
         );
 
         tentativa.setXpGanho(
